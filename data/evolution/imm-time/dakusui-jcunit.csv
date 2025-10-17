@@ -1,0 +1,5 @@
+sha,download status,download time,test status,test time,mop status,mop time,gen status,gen time,imm status,imm time,imop-gen status,imop-gen time,imop-mop status,imop-mop time,gen+ps1c status,gen+ps1c time,gen+ps3cl status,gen+ps3cl time,mop+ps1c status,mop+ps1c time,mop+ps3cl status,mop+ps3cl time,imm+imop status,imm+imop time,imm+ps1c status,imm+ps1c time,imm+ps3cl status,imm+ps3cl time
+e46fcbb08d6764771769e4cd2bed088151c36911,0,13.619,0,9.240,0,494.865,0,489.550,0,489.868,0,498.105,0,575.494,0,498.471,0,493.679,0,576.768,0,576.050,0,490.973,0,494.405,0,497.568
+086211b256723f79f1ad1bb46e981b1502027bdc,0,10.635,0,9.089,0,482.267,0,490.198,0,219.497,0,465.130,0,538.820,0,467.898,0,234.384,0,548.662,0,261.014,0,226.665,0,215.915,0,146.980
+a2277fcbd30a39abc1ba54863a8caccb7618e6d3,0,10.521,0,8.797,0,483.333,0,489.837,0,219.889,0,475.925,0,550.968,0,468.537,0,237.023,0,548.096,0,251.505,0,221.955,0,215.076,0,148.931
+a584486c1c005a50517b0de771bf255121370db1,0,10.769,0,8.902,0,484.890,0,491.301,0,87.862,0,470.980,0,548.741,0,464.470,0,229.345,0,534.521,0,246.539,0,88.473,0,84.049,0,22.845

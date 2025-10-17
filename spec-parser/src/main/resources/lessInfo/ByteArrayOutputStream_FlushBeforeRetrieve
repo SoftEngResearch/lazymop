@@ -1,0 +1,4 @@
+[]::[{zzzbottom=-1}]
+[OutputStream]::[{zzzbottom=-1}]
+[ByteArrayOutputStream]::[{zzzbottom=-1}]
+[OutputStream, ByteArrayOutputStream]::[{ByteArrayOutputStream=0}, {OutputStream=0}, {zzzbottom=-1}]

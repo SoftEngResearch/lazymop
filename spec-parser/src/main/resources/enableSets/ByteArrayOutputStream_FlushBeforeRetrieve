@@ -1,0 +1,1 @@
+{flush=[[ByteArrayOutputStream b, OutputStream o], []], tobytearray=[[ByteArrayOutputStream b, OutputStream o], []], outputstreaminit=[[ByteArrayOutputStream b, OutputStream o], []], write=[[ByteArrayOutputStream b, OutputStream o], []], close=[[ByteArrayOutputStream b, OutputStream o], []], tostring=[[ByteArrayOutputStream b, OutputStream o], []]}

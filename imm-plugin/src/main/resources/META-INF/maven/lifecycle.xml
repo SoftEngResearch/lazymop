@@ -1,0 +1,63 @@
+<lifecycles xmlns="http://maven.apache.org/LIFECYCLE/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://maven.apache.org/LIFECYCLE/1.0.0 http://maven.apache.org/xsd/lifecycle-1.0.0.xsd">
+    <lifecycle>
+        <id>find</id>
+        <phases>
+            <phase>
+                <id>validate</id>
+                <configuration/>
+            </phase>
+        </phases>
+    </lifecycle>
+
+    <lifecycle>
+        <id>run</id>
+        <phases>
+            <phase>
+                <id>initialize</id>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>find</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration/>
+            </phase>
+            <phase>
+                <id>process-test-classes</id>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>remove</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration/>
+            </phase>
+            <phase>
+                <id>test</id>
+            </phase>
+        </phases>
+    </lifecycle>
+
+    <lifecycle>
+        <id>incremental-run</id>
+        <phases>
+            <phase>
+                <id>process-test-classes</id>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>incremental-remove</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration/>
+            </phase>
+            <phase>
+                <id>test</id>
+            </phase>
+        </phases>
+    </lifecycle>
+</lifecycles>

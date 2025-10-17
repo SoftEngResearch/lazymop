@@ -1,0 +1,8 @@
+[]::[{zzzbottom=-1}]
+[Iterator, Collection]::[{Collection=0}, {Iterator=0}, {zzzbottom=-1}]
+[Collection, Map]::[{Collection=0}, {Map=0}, {zzzbottom=-1}]
+[Iterator, Collection, Map]::[{Collection=0, Iterator=0}, {Collection=0, Map=0}, {Collection=0}, {Iterator=0, Map=0}, {Iterator=0}, {Map=0}, {zzzbottom=-1}]
+[Iterator]::[{zzzbottom=-1}]
+[Collection]::[{zzzbottom=-1}]
+[Map]::[{zzzbottom=-1}]
+[Iterator, Map]::[{Iterator=0}, {Map=0}, {zzzbottom=-1}]

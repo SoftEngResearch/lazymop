@@ -1,0 +1,1 @@
+{getiter=[[Map m, Collection c]], modifyCol=[[Map m, Collection c, Iterator i], [Map m, Collection c]], getset=[[]], modifyMap=[[Map m, Collection c, Iterator i], [Map m, Collection c]], useiter=[[Map m, Collection c, Iterator i]]}
