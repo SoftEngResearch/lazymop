@@ -27,6 +27,7 @@ echo "STAGE 2: install javamop frontend"
     echo "STAGE 2.1: install tracemop root"
     (
         cd tracemop
+        git checkout 3de76a81606fce70e893ab305320b310a614438a
         mvn install -DskipTests -DskipITs -Dit.skip
     )&> gol-tracemop
 

@@ -6,7 +6,7 @@ TINYMOP_DIR="${SCRIPT_DIR}/tinymop"
 function clone_repository() {
   echo "Cloning lazymop repository"
   pushd ${SCRIPT_DIR} &> /dev/null
-  git clone https://github.com/paper-knowledge/lazymop tinymop
+  git clone https://github.com/SoftEngResearch/lazymop tinymop
   popd &> /dev/null
 }
 
