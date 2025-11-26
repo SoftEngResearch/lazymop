@@ -7,6 +7,8 @@ function clone_repository() {
   echo "Cloning lazymop repository"
   pushd ${SCRIPT_DIR} &> /dev/null
   git clone https://github.com/SoftEngResearch/lazymop tinymop
+  cd tinymop
+  git checkout fsm-fix
   popd &> /dev/null
 }
 
