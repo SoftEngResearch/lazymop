@@ -179,6 +179,12 @@ if [[ ${TINYMOP_ONLY} != "true" && ${SKIP_TRACEMOP} == "false" ]]; then
     export TRACEDB_PATH=${CURRENT_DIR}/${PROJECT}/all-traces
     export COLLECT_MONITORS=1
     export TRACEDB_RANDOM=1
+    export RVMLOGGINGLEVEL=UNIQUE
+
+    # Create DB config file for TraceMOP agent (if not set during build)
+    db_config_file="${CURRENT_DIR}/${PROJECT}/.trace-db.config"
+    echo -e "db=memory\ndumpDB=false" > ${db_config_file}
+    export TRACEDB_CONFIG_PATH=${db_config_file}
 
     if [[ -n ${PROFILE} ]]; then
         export MOP_AGENT_PATH="-javaagent:${SCRIPT_DIR}/../agents/threeTrack.jar -agentpath:${PROFILE}=start,alloc,interval=5ms,event=wall,file=profile.jfr"
