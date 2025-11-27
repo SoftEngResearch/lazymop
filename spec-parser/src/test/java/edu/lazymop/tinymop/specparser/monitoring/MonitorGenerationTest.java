@@ -203,7 +203,7 @@ public class MonitorGenerationTest {
         SpecParser parser = new SpecParser(false);
         parser.setOutputDirectory(new File(System.getProperty("java.io.tmpdir")));
         parser.parseSingleSpec(resourceFile);
-        File rvmFile = new File(resourceFile.getPath().replace(".mop", ".rvm"));
+        File rvmFile = new File(parser.getOutputDirectory(), resourceFile.getName().replace(".mop", ".rvm"));
         RVMParser.processSpecFile(rvmFile, parser.getOutputDirectory(), Main.options.verbose);
         StandaloneRVMProcessor processor = RVMParser.processor;
         MonitorGenerationUtil monGenUtil = new MonitorGenerationUtil(processor.getName(), processor.getMonitorData());

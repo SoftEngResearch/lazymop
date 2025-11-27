@@ -342,11 +342,13 @@ public class MonitorGenerator {
                 // the transitions map uses the minimized FSM, but the instrumentation uses the original events from the spec file
                 // so we need to add ignore statements for all events that are not in the transitions map
                 // violating states are handled above so this won't lead to missed violations.
-                for (String event : monGenUtil.getEventNames()) {
-                    if(!handledEvents.contains(event)) {
-                        MethodCallExpr ignoreExpr = new MethodCallExpr(top, "ignore");
-                        ignoreExpr.addArgument("Event." + eventNameToIDMapping.get(event));
-                        top = ignoreExpr;
+                if (!monGenUtil.getCategory().equals("fail")) {
+                    for (String event : monGenUtil.getEventNames()) {
+                        if(!handledEvents.contains(event)) {
+                                MethodCallExpr ignoreExpr = new MethodCallExpr(top, "ignore");
+                                ignoreExpr.addArgument("Event." + eventNameToIDMapping.get(event));
+                                top = ignoreExpr;
+                        }
                     }
                 }
             }
