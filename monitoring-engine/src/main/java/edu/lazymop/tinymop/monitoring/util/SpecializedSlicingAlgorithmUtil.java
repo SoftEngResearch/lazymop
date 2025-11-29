@@ -298,7 +298,7 @@ public class SpecializedSlicingAlgorithmUtil {
     }
 
     private static File getTestsFile(String specName) {
-        return new File(getDirectory() + File.separator + specName + "-tests.csv").getAbsoluteFile();
+        return new File(getDirectory() + File.separator + specName + "-tests").getAbsoluteFile();
     }
 
     private static File getLocationFile(String specName) {
