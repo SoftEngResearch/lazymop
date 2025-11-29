@@ -115,7 +115,7 @@ if [[ ${ENABLE_ON_DEMAND_SYNC} != "false" ]]; then
     cp ./spec-parser/src/main/resources/ThreadAspect.aj out/ThreadAspect.aj
 fi
 
-#cp ./spec-parser/src/main/resources/TestNameAspect.aj out/TestNameAspect.aj
+cp ./spec-parser/src/main/resources/TestNameAspect.aj out/TestNameAspect.aj
 for spec in "${specs[@]}"; do
     spec=$(echo "${spec}" | cut -d '.' -f 1)
     echo "Adding BaseAspect for spec ${spec}"
