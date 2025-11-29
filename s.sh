@@ -137,13 +137,20 @@ if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
+# used to be 1.8
+ASPECTJ_HOME=${ASPECTJ_HOME:-$HOME/aspectj-1.9.7}
+if [[ ! -d "${ASPECTJ_HOME}/lib" ]]; then
+    echo "Missing AspectJ installation at ${ASPECTJ_HOME}. Set ASPECTJ_HOME to a valid path."
+    exit 1
+fi
+
 AGENT_PREP="agent-prep"
 rm -rf ${AGENT_PREP}
 mkdir ${AGENT_PREP}
 cp monitoring-engine/target/monitoring-engine-1.0-SNAPSHOT.jar ${AGENT_PREP}
 cp spec-parser/target/spec-parser-1.0-SNAPSHOT.jar ${AGENT_PREP}
-cp ~/aspectj1.8/lib/aspectjrt.jar ${AGENT_PREP}
-cp ~/aspectj1.8/lib/aspectjweaver.jar ${AGENT_PREP}
+cp ${ASPECTJ_HOME}/lib/aspectjrt.jar ${AGENT_PREP}
+cp ${ASPECTJ_HOME}/lib/aspectjweaver.jar ${AGENT_PREP}
 
 # 2. copy over compiled aspects
 
