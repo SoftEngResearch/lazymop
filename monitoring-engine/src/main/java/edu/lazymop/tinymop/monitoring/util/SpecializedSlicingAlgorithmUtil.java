@@ -7,9 +7,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
@@ -31,6 +33,7 @@ public class SpecializedSlicingAlgorithmUtil {
             String tmp = System.getenv("TINYMOP_COLLECT_TRACES");
             boolean collect = tmp == null || tmp.equals("1");
 
+            Map<String, Map<Integer, Integer>> traceTestFrequencies = collect ? new LinkedHashMap<>() : null;
             List<String> traces = new ArrayList<>();
             List<String> tracesFromChangedClasses = new ArrayList<>();
             int totalBindings = 0;
@@ -74,9 +77,15 @@ public class SpecializedSlicingAlgorithmUtil {
                     if (!verdicts.containsKey(verdict)) {
                         verdicts.put(verdict, new HashSet<>());
                     }
-                    String traceInString = compactTrace(obj.node.monitors, obj.events);
+                    String traceBody = compactTraceBody(obj.events);
+                    String traceInString = obj.node.monitors + " " + traceBody;
                     verdicts.get(verdict).add(traceInString);
                     if (collect) {
+                        if (traceTestFrequencies != null) {
+                            Map<Integer, Integer> perTraceTests = traceTestFrequencies
+                                    .computeIfAbsent(traceBody, key -> new HashMap<>());
+                            mergeTestCounts(perTraceTests, obj.node.snapshotTestCounts());
+                        }
                         if (obj.fromChangedClasses) {
                             tracesFromChangedClasses.add(traceInString);
                             totalNewBindings += obj.node.monitors;
@@ -165,6 +174,28 @@ public class SpecializedSlicingAlgorithmUtil {
                     }
                 }
 
+                if (traceTestFrequencies != null && !traceTestFrequencies.isEmpty()) {
+                    Map<Integer, String> testNames = GlobalMonitorManager.getTestNamesSnapshot();
+                    try (FileWriter fw = new FileWriter(getTestsFile(specName), false)) {
+                        List<String> traceBodies = new ArrayList<>(traceTestFrequencies.keySet());
+                        Collections.sort(traceBodies);
+                        int traceId = 1;
+                        for (String body : traceBodies) {
+                            Map<Integer, Integer> testCounts = traceTestFrequencies.getOrDefault(body, Collections.emptyMap());
+                            fw.write(traceId + " " + formatTestCounts(testCounts, testNames) + System.lineSeparator());
+                            traceId += 1;
+                        }
+                    } catch (IOException ioe) {
+                        try (FileWriter fw = new FileWriter(getErrorFile(specName), false)) {
+                            fw.write(ioe + "\n");
+                            fw.write(ioe.getMessage() + "\n");
+                            fw.write(ioe.toString());
+                        } catch (IOException ignored) {
+                            // Nothing we can do here
+                        }
+                    }
+                }
+
                 // Dump location map
                 try (FileWriter fw = new FileWriter(getLocationFile(specName), false)) {
                     for (Map.Entry<Integer, String> entry : monitorManager.locationsMapping.entrySet()) {
@@ -191,13 +222,13 @@ public class SpecializedSlicingAlgorithmUtil {
         }
     }
 
-    private static String compactTrace(int frequency, List<String> events) {
-        if (events.isEmpty()) {
-            return frequency + " []";
+    private static String compactTraceBody(List<String> events) {
+        if (events == null || events.isEmpty()) {
+            return "[]";
         }
 
         StringBuilder builder = new StringBuilder();
-        builder.append(frequency).append(" [");
+        builder.append("[");
         String lastEvent = events.get(0);
         int lastEventFrequency = 1;
         boolean firstEvent = true;
@@ -230,6 +261,30 @@ public class SpecializedSlicingAlgorithmUtil {
         return builder.toString();
     }
 
+    private static void mergeTestCounts(Map<Integer, Integer> destination, Map<Integer, Integer> addition) {
+        if (addition == null || addition.isEmpty()) {
+            return;
+        }
+
+        for (Map.Entry<Integer, Integer> entry : addition.entrySet()) {
+            destination.merge(entry.getKey(), entry.getValue(), Integer::sum);
+        }
+    }
+
+    private static String formatTestCounts(Map<Integer, Integer> testCounts, Map<Integer, String> testNames) {
+        if (testCounts == null || testCounts.isEmpty()) {
+            return "{}";
+        }
+
+        List<String> segments = new ArrayList<>();
+        for (Map.Entry<Integer, Integer> entry : testCounts.entrySet()) {
+            String name = testNames.getOrDefault(entry.getKey(), "N/A");
+            segments.add(name + "=" + entry.getValue());
+        }
+        Collections.sort(segments);
+        return "{" + String.join(", ", segments) + "}";
+    }
+
     private static File getViolationFile(String specName) {
         return new File(getDirectory() + File.separator + specName + "-violations").getAbsoluteFile();
     }
@@ -240,6 +295,10 @@ public class SpecializedSlicingAlgorithmUtil {
 
     private static File getTracesFromChangedClassFile(String specName) {
         return new File(getDirectory() + File.separator + specName + "-changedTraces").getAbsoluteFile();
+    }
+
+    private static File getTestsFile(String specName) {
+        return new File(getDirectory() + File.separator + specName + "-tests.csv").getAbsoluteFile();
     }
 
     private static File getLocationFile(String specName) {

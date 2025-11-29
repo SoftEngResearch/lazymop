@@ -69,6 +69,11 @@ public class BindingClass extends Component {
                         .addStatement(new AssignExpr(
                                 new FieldAccessExpr(new FieldAccessExpr(new NameExpr("ret"), "node"), "monitors"),
                                 new IntegerLiteralExpr("1"), AssignExpr.Operator.PLUS))
+                        .addStatement(new MethodCallExpr(
+                                new FieldAccessExpr(new NameExpr("ret"), "node"),
+                                "incrementTestCount",
+                                new NodeList<>(new FieldAccessExpr(new NameExpr("ret"), "testId"))
+                        ))
                         // return ret;
                         .addStatement(new ReturnStmt(new NameExpr("ret")))
 
@@ -151,6 +156,11 @@ public class BindingClass extends Component {
                         AssignExpr.Operator.MINUS
                 )
         ));
+        seeMethodBody.addStatement(new MethodCallExpr(
+                new NameExpr("node"),
+                "decrementTestCount",
+                new NodeList<>(new FieldAccessExpr(new ThisExpr(), "testId"))
+        ));
 
         // node = node.getNextNodeAfterSeeingEvent(eID);
         seeMethodBody.addStatement(new ExpressionStmt(
@@ -169,6 +179,11 @@ public class BindingClass extends Component {
                         new IntegerLiteralExpr("1"),
                         AssignExpr.Operator.PLUS
                 )
+        ));
+        seeMethodBody.addStatement(new MethodCallExpr(
+                new NameExpr("node"),
+                "incrementTestCount",
+                new NodeList<>(new FieldAccessExpr(new ThisExpr(), "testId"))
         ));
         klass.addMember(seeMethod);
 
@@ -250,9 +265,19 @@ public class BindingClass extends Component {
                 AssignExpr.Operator.ASSIGN
         ));
         constructorBody.addStatement(new AssignExpr(
+                new FieldAccessExpr(new ThisExpr(), "testId"),
+                new FieldAccessExpr(new NameExpr("GlobalMonitorManager"), "currentRunningTest"),
+                AssignExpr.Operator.ASSIGN
+        ));
+        constructorBody.addStatement(new AssignExpr(
                 new FieldAccessExpr(new FieldAccessExpr(new ThisExpr(), "node"), "monitors"),
                 new IntegerLiteralExpr("1"),
                 AssignExpr.Operator.PLUS
+        ));
+        constructorBody.addStatement(new MethodCallExpr(
+                new FieldAccessExpr(new ThisExpr(), "node"),
+                "incrementTestCount",
+                new NodeList<>(new FieldAccessExpr(new ThisExpr(), "testId"))
         ));
         constructorBody.addStatement(new AssignExpr(
                 new NameExpr("state"),
@@ -285,6 +310,7 @@ public class BindingClass extends Component {
 
         // int state;
         bindingClass.addField(PrimitiveType.intType(), "state");
+        bindingClass.addField(PrimitiveType.intType(), "testId");
 
         // Trie.Node node;
         bindingClass.addField("Trie.Node", "node");
