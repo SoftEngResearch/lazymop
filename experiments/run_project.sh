@@ -5,12 +5,14 @@ CURRENT_DIR=$(pwd)
 export PROFILE=""
 export ENABLE_ON_DEMAND_SYNC="true"
 export ENABLE_INT_ENCODING="true"
+export COLLECT_TEST_TRACES="true"
 
-while getopts :p:s:e: opts; do
+while getopts :p:s:e:t: opts; do
     case "${opts}" in
         p ) PROFILE="${OPTARG}" ;;
         s ) ENABLE_ON_DEMAND_SYNC="${OPTARG}" ;;
         e ) ENABLE_INT_ENCODING="${OPTARG}" ;;
+        t ) COLLECT_TEST_TRACES="${OPTARG}" ;;
     esac
 done
 shift $((${OPTIND} - 1))
@@ -31,7 +33,7 @@ fi
 if [[ ! -f ${SCRIPT_DIR}/../agents/gen-normal.jar ]]; then
     echo "Building [normal] gen.jar agent"
     pushd ${SCRIPT_DIR}/.. &> /dev/null
-    bash make-jars.sh false ${ENABLE_ON_DEMAND_SYNC} ${ENABLE_INT_ENCODING}
+    bash make-jars.sh false ${ENABLE_ON_DEMAND_SYNC} ${ENABLE_INT_ENCODING} ${COLLECT_TEST_TRACES}
     mv ${SCRIPT_DIR}/../agents/gen.jar ${SCRIPT_DIR}/../agents/gen-normal.jar
     popd &> /dev/null
 fi
@@ -39,12 +41,12 @@ fi
 if [[ ! -f ${SCRIPT_DIR}/../agents/gen-imm.jar && ${RUN_IMM} == "true" ]]; then
     echo "Building [imm] gen.jar agent"
     pushd ${SCRIPT_DIR}/.. &> /dev/null
-    bash make-jars.sh true ${ENABLE_ON_DEMAND_SYNC} ${ENABLE_INT_ENCODING}
+    bash make-jars.sh true ${ENABLE_ON_DEMAND_SYNC} ${ENABLE_INT_ENCODING} ${COLLECT_TEST_TRACES}
     mv ${SCRIPT_DIR}/../agents/gen.jar ${SCRIPT_DIR}/../agents/gen-imm.jar
     popd &> /dev/null
 fi
 
-echo "Running ${PROJECT} with SHA ${SHA}, TINYMOP_ONLY: ${TINYMOP_ONLY}, RUN_IMM: ${RUN_IMM}, SKIP_TRACEMOP: ${SKIP_TRACEMOP}, PROFILE: ${PROFILE}, ENABLE_ON_DEMAND_SYNC: ${ENABLE_ON_DEMAND_SYNC}, and ENABLE_INT_ENCODING: ${ENABLE_INT_ENCODING}"
+echo "Running ${PROJECT} with SHA ${SHA}, TINYMOP_ONLY: ${TINYMOP_ONLY}, RUN_IMM: ${RUN_IMM}, SKIP_TRACEMOP: ${SKIP_TRACEMOP}, PROFILE: ${PROFILE}, ENABLE_ON_DEMAND_SYNC: ${ENABLE_ON_DEMAND_SYNC}, ENABLE_INT_ENCODING: ${ENABLE_INT_ENCODING}, and COLLECT_TEST_TRACES: ${COLLECT_TEST_TRACES}"
 
 source ${SCRIPT_DIR}/constants.sh
 rm -rf ${PROJECT}

@@ -124,7 +124,8 @@ public class SpecParser {
 
             // Generate monitor managers
             SlicerGenerationUtil slicerGenUtil = new SlicerGenerationUtil(processor.getName(),
-                    processor.getRvmSpecFile(), processor.getMonitorData());
+                    processor.getRvmSpecFile(), processor.getMonitorData(), 
+                    edu.lazymop.tinymop.specparser.Main.collectTestTraces);
             try (BufferedWriter writer = Writer.getWriter(
                     new File(getOutputDirectory(), slicerGenUtil.getManagerFilename()).toString())) {
                 writer.write(new MonitorManagerGenerator(slicerGenUtil, processor.getMonitorData()).generateManagerCode());

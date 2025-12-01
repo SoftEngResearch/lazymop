@@ -9,12 +9,14 @@ SCRIPT_DIR=$(cd $(dirname $0) && pwd)
 export PROFILE="false"
 export ENABLE_ON_DEMAND_SYNC="true"
 export ENABLE_INT_ENCODING="true"
+export COLLECT_TEST_TRACES="true"
 
-while getopts :p:s:e: opts; do
+while getopts :p:s:e:t: opts; do
   case "${opts}" in
     p ) PROFILE="${OPTARG}" ;;
     s ) ENABLE_ON_DEMAND_SYNC="${OPTARG}" ;;
     e ) ENABLE_INT_ENCODING="${OPTARG}" ;;
+    t ) COLLECT_TEST_TRACES="${OPTARG}" ;;
   esac
 done
 shift $((${OPTIND} - 1))
@@ -82,11 +84,11 @@ function run_project() {
   fi
   
   if [[ ${PROFILE} == "true" ]]; then
-    echo "Run command: timeout ${TIMEOUT} bash experiments/run_project.sh -p /home/tinymop/async-profiler-2.9-linux-x64/build/libasyncProfiler.so -s ${ENABLE_ON_DEMAND_SYNC} -e ${ENABLE_INT_ENCODING} ${repo} ${sha}"
-    timeout ${TIMEOUT} docker exec -w /home/tinymop/tinymop -e M2_HOME=/home/tinymop/apache-maven -e MAVEN_HOME=/home/tinymop/apache-maven -e CLASSPATH=/home/tinymop/aspectj-1.9.7/lib/aspectjtools.jar:/home/tinymop/aspectj-1.9.7/lib/aspectjrt.jar:/home/tinymop/aspectj-1.9.7/lib/aspectjweaver.jar: -e PATH=/home/tinymop/apache-maven/bin:/usr/lib/jvm/java-8-openjdk/bin:/home/tinymop/aspectj-1.9.7/bin:/home/tinymop/aspectj-1.9.7/lib/aspectjweaver.jar:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin ${id} timeout ${TIMEOUT} bash experiments/run_project.sh -p /home/tinymop/async-profiler-2.9-linux-x64/build/libasyncProfiler.so -s ${ENABLE_ON_DEMAND_SYNC} -e ${ENABLE_INT_ENCODING} ${repo} ${sha} &> ${OUTPUT_DIR}/${project_name}/docker.log
+    echo "Run command: timeout ${TIMEOUT} bash experiments/run_project.sh -p /home/tinymop/async-profiler-2.9-linux-x64/build/libasyncProfiler.so -s ${ENABLE_ON_DEMAND_SYNC} -e ${ENABLE_INT_ENCODING} -t ${COLLECT_TEST_TRACES} ${repo} ${sha}"
+    timeout ${TIMEOUT} docker exec -w /home/tinymop/tinymop -e M2_HOME=/home/tinymop/apache-maven -e MAVEN_HOME=/home/tinymop/apache-maven -e CLASSPATH=/home/tinymop/aspectj-1.9.7/lib/aspectjtools.jar:/home/tinymop/aspectj-1.9.7/lib/aspectjrt.jar:/home/tinymop/aspectj-1.9.7/lib/aspectjweaver.jar: -e PATH=/home/tinymop/apache-maven/bin:/usr/lib/jvm/java-8-openjdk/bin:/home/tinymop/aspectj-1.9.7/bin:/home/tinymop/aspectj-1.9.7/lib/aspectjweaver.jar:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin ${id} timeout ${TIMEOUT} bash experiments/run_project.sh -p /home/tinymop/async-profiler-2.9-linux-x64/build/libasyncProfiler.so -s ${ENABLE_ON_DEMAND_SYNC} -e ${ENABLE_INT_ENCODING} -t ${COLLECT_TEST_TRACES} ${repo} ${sha} &> ${OUTPUT_DIR}/${project_name}/docker.log
   else
-    echo "Run command: timeout ${TIMEOUT} bash experiments/run_project.sh -s ${ENABLE_ON_DEMAND_SYNC} -e ${ENABLE_INT_ENCODING} ${repo} ${sha}"
-    timeout ${TIMEOUT} docker exec -w /home/tinymop/tinymop -e M2_HOME=/home/tinymop/apache-maven -e MAVEN_HOME=/home/tinymop/apache-maven -e CLASSPATH=/home/tinymop/aspectj-1.9.7/lib/aspectjtools.jar:/home/tinymop/aspectj-1.9.7/lib/aspectjrt.jar:/home/tinymop/aspectj-1.9.7/lib/aspectjweaver.jar: -e PATH=/home/tinymop/apache-maven/bin:/usr/lib/jvm/java-8-openjdk/bin:/home/tinymop/aspectj-1.9.7/bin:/home/tinymop/aspectj-1.9.7/lib/aspectjweaver.jar:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin ${id} timeout ${TIMEOUT} bash experiments/run_project.sh -s ${ENABLE_ON_DEMAND_SYNC} -e ${ENABLE_INT_ENCODING} ${repo} ${sha} &> ${OUTPUT_DIR}/${project_name}/docker.log
+    echo "Run command: timeout ${TIMEOUT} bash experiments/run_project.sh -s ${ENABLE_ON_DEMAND_SYNC} -e ${ENABLE_INT_ENCODING} -t ${COLLECT_TEST_TRACES} ${repo} ${sha}"
+    timeout ${TIMEOUT} docker exec -w /home/tinymop/tinymop -e M2_HOME=/home/tinymop/apache-maven -e MAVEN_HOME=/home/tinymop/apache-maven -e CLASSPATH=/home/tinymop/aspectj-1.9.7/lib/aspectjtools.jar:/home/tinymop/aspectj-1.9.7/lib/aspectjrt.jar:/home/tinymop/aspectj-1.9.7/lib/aspectjweaver.jar: -e PATH=/home/tinymop/apache-maven/bin:/usr/lib/jvm/java-8-openjdk/bin:/home/tinymop/aspectj-1.9.7/bin:/home/tinymop/aspectj-1.9.7/lib/aspectjweaver.jar:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin ${id} timeout ${TIMEOUT} bash experiments/run_project.sh -s ${ENABLE_ON_DEMAND_SYNC} -e ${ENABLE_INT_ENCODING} -t ${COLLECT_TEST_TRACES} ${repo} ${sha} &> ${OUTPUT_DIR}/${project_name}/docker.log
   fi
 
   docker cp ${id}:/home/tinymop/tinymop/${project_name} ${OUTPUT_DIR}/${project_name}/output

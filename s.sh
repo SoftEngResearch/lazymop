@@ -2,11 +2,13 @@ SCRIPT_DIR=$(cd $(dirname $0) && pwd)
 FOR_IMM=$1
 ENABLE_ON_DEMAND_SYNC=$2
 ENABLE_INT_ENCODING=$3
+COLLECT_TEST_TRACES=${4:-true}
 
 echo "===== Settings ====="
 echo "FOR_IMM: ${FOR_IMM}"
 echo "ENABLE_ON_DEMAND_SYNC: ${ENABLE_ON_DEMAND_SYNC}"
 echo "ENABLE_INT_ENCODING: ${ENABLE_INT_ENCODING}"
+echo "COLLECT_TEST_TRACES: ${COLLECT_TEST_TRACES}"
 
 rm -rf out output && mkdir out output
 
@@ -17,10 +19,10 @@ if [[ $? -ne 0 ]]; then
 fi
 
 if [[ ${ENABLE_ON_DEMAND_SYNC} == "false" ]]; then
-    mvn -pl spec-parser exec:java -Dexec.mainClass="edu.lazymop.tinymop.specparser.Main" -Dexec.args="output props false"
+    mvn -pl spec-parser exec:java -Dexec.mainClass="edu.lazymop.tinymop.specparser.Main" -Dexec.args="output props false ${COLLECT_TEST_TRACES}"
     status=$?
 else
-    mvn -pl spec-parser exec:java -Dexec.mainClass="edu.lazymop.tinymop.specparser.Main" -Dexec.args="output props"
+    mvn -pl spec-parser exec:java -Dexec.mainClass="edu.lazymop.tinymop.specparser.Main" -Dexec.args="output props true ${COLLECT_TEST_TRACES}"
     status=$?
 fi
 

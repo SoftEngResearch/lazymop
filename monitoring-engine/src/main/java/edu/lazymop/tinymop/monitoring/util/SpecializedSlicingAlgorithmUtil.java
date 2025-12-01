@@ -32,8 +32,12 @@ public class SpecializedSlicingAlgorithmUtil {
 
             String tmp = System.getenv("TINYMOP_COLLECT_TRACES");
             boolean collect = tmp == null || tmp.equals("1");
+            
+            // Check if test collection was enabled during build time
+            boolean collectTestTraces = !GlobalMonitorManager.testIDToName.isEmpty();
 
-            Map<String, Map<Integer, Integer>> traceTestFrequencies = collect ? new LinkedHashMap<>() : null;
+            Map<String, Map<Integer, Integer>> traceTestFrequencies = 
+                (collect && collectTestTraces) ? new LinkedHashMap<>() : null;
             List<String> traces = new ArrayList<>();
             List<String> tracesFromChangedClasses = new ArrayList<>();
             int totalBindings = 0;
