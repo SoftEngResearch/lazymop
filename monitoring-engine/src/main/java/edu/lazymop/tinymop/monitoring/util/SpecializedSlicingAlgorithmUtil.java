@@ -33,8 +33,8 @@ public class SpecializedSlicingAlgorithmUtil {
             String tmp = System.getenv("TINYMOP_COLLECT_TRACES");
             boolean collect = tmp == null || tmp.equals("1");
             
-            // Check if test collection was enabled during build time
-            boolean collectTestTraces = !GlobalMonitorManager.testIDToName.isEmpty();
+            // This flag is set by generated monitor managers based on build-time
+            boolean collectTestTraces = GlobalMonitorManager.testTrackingEnabled;
 
             Map<String, Map<Integer, Integer>> traceTestFrequencies = 
                 (collect && collectTestTraces) ? new LinkedHashMap<>() : null;

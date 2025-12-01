@@ -17,6 +17,9 @@ import edu.lazymop.tinymop.monitoring.util.SpecializedSlicingAlgorithmUtil;
 
 public class GlobalMonitorManager {
 
+    // Set by generated monitor managers to indicate if test tracking was compiled in
+    public static boolean testTrackingEnabled = false;
+    
     public static int currentRunningTest = 0;
     public static int nextTestID = 1;
     public static Map<Integer, Integer> locationToTestID = new HashMap<>();

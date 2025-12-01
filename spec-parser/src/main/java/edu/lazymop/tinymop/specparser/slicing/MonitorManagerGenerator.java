@@ -226,11 +226,23 @@ public class MonitorManagerGenerator {
         addImport(code);
         klass.addPrivateField(fileName, "managerInstance").setStatic(true);
 
+        BlockStmt constructorBody = new BlockStmt();
+        constructorBody.addStatement(new ExplicitConstructorInvocationStmt().setThis(false)
+                .addArgument(new StringLiteralExpr(specName)));
+        
+        // Set the global flag to indicate if test tracking was compiled in
+        if (slicerGenUtil.shouldCollectTestTraces()) {
+            constructorBody.addStatement(new AssignExpr(
+                    new FieldAccessExpr(new NameExpr("GlobalMonitorManager"), "testTrackingEnabled"),
+                    new com.github.javaparser.ast.expr.BooleanLiteralExpr(true),
+                    AssignExpr.Operator.ASSIGN
+            ));
+        }
+        
         ConstructorDeclaration constructor = new ConstructorDeclaration()
                 .setName(fileName)
                 .setModifiers(Modifier.Keyword.PUBLIC)
-                .setBody(new BlockStmt().addStatement(new ExplicitConstructorInvocationStmt().setThis(false)
-                        .addArgument(new StringLiteralExpr(specName))));
+                .setBody(constructorBody);
         klass.addMember(constructor);
 
         generateCreateMonitor(klass);
