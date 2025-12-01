@@ -75,7 +75,7 @@ public class SpecializedSlicingAlgorithmUtil {
                     try {
                         verdict = monitorManager.runTraceOnMonitor(monitor, monitorableTrace);
                     } catch (IllegalStateException ex) {
-                        verdict = RuntimeMonitor.VerdictCategory.VIOLATING;
+                        verdict = RuntimeMonitor.VerdictCategory.FAIL;
                     }
 
                     if (!verdicts.containsKey(verdict)) {
