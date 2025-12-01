@@ -15,8 +15,15 @@ agent_dir="agents"
 rm -rf ${agent_dir}/gen.jar
 mkdir -p ${agent_dir}
 
+# jar name based on test collection flag
+if [[ ${COLLECT_TEST_TRACES} == "false" ]]; then
+    jar_name="gen.jar"
+else
+    jar_name="gen-test.jar"
+fi
+
 bash s.sh ${FOR_IMM} ${ENABLE_ON_DEMAND_SYNC} ${ENABLE_INT_ENCODING} ${COLLECT_TEST_TRACES} &> gol-build-agent.log
-mv agent.jar ${agent_dir}/gen.jar
+mv agent.jar ${agent_dir}/${jar_name}
 grep BUILD gol-build-agent.log
 
 mv gol-build-agent.log ${agent_dir}

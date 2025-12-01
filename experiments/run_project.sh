@@ -30,19 +30,30 @@ if [[ -z ${SHA} ]]; then
     exit 1
 fi
 
-if [[ ! -f ${SCRIPT_DIR}/../agents/gen-normal.jar ]]; then
-    echo "Building [normal] gen.jar agent"
+# Determine jar names based on test collection flag
+if [[ ${COLLECT_TEST_TRACES} == "false" ]]; then
+    normal_jar="gen-normal.jar"
+    imm_jar="gen-imm.jar"
+    build_jar="gen.jar"
+else
+    normal_jar="gen-normal-test.jar"
+    imm_jar="gen-imm-test.jar"
+    build_jar="gen-test.jar"
+fi
+
+if [[ ! -f ${SCRIPT_DIR}/../agents/${normal_jar} ]]; then
+    echo "Building [normal] ${normal_jar} agent"
     pushd ${SCRIPT_DIR}/.. &> /dev/null
     bash make-jars.sh false ${ENABLE_ON_DEMAND_SYNC} ${ENABLE_INT_ENCODING} ${COLLECT_TEST_TRACES}
-    mv ${SCRIPT_DIR}/../agents/gen.jar ${SCRIPT_DIR}/../agents/gen-normal.jar
+    mv ${SCRIPT_DIR}/../agents/${build_jar} ${SCRIPT_DIR}/../agents/${normal_jar}
     popd &> /dev/null
 fi
 
-if [[ ! -f ${SCRIPT_DIR}/../agents/gen-imm.jar && ${RUN_IMM} == "true" ]]; then
-    echo "Building [imm] gen.jar agent"
+if [[ ! -f ${SCRIPT_DIR}/../agents/${imm_jar} && ${RUN_IMM} == "true" ]]; then
+    echo "Building [imm] ${imm_jar} agent"
     pushd ${SCRIPT_DIR}/.. &> /dev/null
     bash make-jars.sh true ${ENABLE_ON_DEMAND_SYNC} ${ENABLE_INT_ENCODING} ${COLLECT_TEST_TRACES}
-    mv ${SCRIPT_DIR}/../agents/gen.jar ${SCRIPT_DIR}/../agents/gen-imm.jar
+    mv ${SCRIPT_DIR}/../agents/${build_jar} ${SCRIPT_DIR}/../agents/${imm_jar}
     popd &> /dev/null
 fi
 
@@ -150,9 +161,9 @@ export TINYMOP_TRACEDB_PATH=$(pwd)/tinymop-logs/tinymop-traces
 export COLLECT_TRACES=1
 
 if [[ -n ${PROFILE} ]]; then
-    export MOP_AGENT_PATH="-javaagent:${SCRIPT_DIR}/../agents/gen-normal.jar -agentpath:${PROFILE}=start,alloc,interval=5ms,event=wall,file=profile.jfr"
+    export MOP_AGENT_PATH="-javaagent:${SCRIPT_DIR}/../agents/${normal_jar} -agentpath:${PROFILE}=start,alloc,interval=5ms,event=wall,file=profile.jfr"
 else
-    export MOP_AGENT_PATH="-javaagent:${SCRIPT_DIR}/../agents/gen-normal.jar"
+    export MOP_AGENT_PATH="-javaagent:${SCRIPT_DIR}/../agents/${normal_jar}"
 fi
 
 filename="gen.log"
@@ -243,10 +254,13 @@ if [[ ${RUN_IMM} == "true" ]]; then
     mkdir $(pwd)/tinymop-logs/tinymop-traces-imm
     export TINYMOP_TRACEDB_PATH=$(pwd)/tinymop-logs/tinymop-traces-imm
 
+    # Use local jar name for IMM
+    local_imm_jar="gen-imm.jar"
+    
     if [[ -n ${PROFILE} ]]; then
-        export MOP_AGENT_PATH="-javaagent:${CURRENT_DIR}/${PROJECT}/gen-imm.jar -agentpath:${PROFILE}=start,alloc,interval=5ms,event=wall,file=profile.jfr"
+        export MOP_AGENT_PATH="-javaagent:${CURRENT_DIR}/${PROJECT}/${local_imm_jar} -agentpath:${PROFILE}=start,alloc,interval=5ms,event=wall,file=profile.jfr"
     else
-        export MOP_AGENT_PATH="-javaagent:${CURRENT_DIR}/${PROJECT}/gen-imm.jar"
+        export MOP_AGENT_PATH="-javaagent:${CURRENT_DIR}/${PROJECT}/${local_imm_jar}"
     fi
 
     filename="imm.log"
@@ -254,8 +268,8 @@ if [[ ${RUN_IMM} == "true" ]]; then
     CMD_PID=$!
     disown
 
-    cp ${SCRIPT_DIR}/../agents/gen-imm.jar gen-imm.jar
-    (time mvn edu.lazymop.tinymop:imm-plugin:1.0-SNAPSHOT:run ${SKIP} -Dsurefire.exitTimeout=172800 -Dmaven.ext.class.path=${SCRIPT_DIR}/../extensions/tinymop-extension-1.0.jar -DtracesDir="$(pwd)/tinymop-logs/tinymop-traces" -Dstats=true -DagentPath=gen-imm.jar) &> tinymop-logs/${filename}
+    cp ${SCRIPT_DIR}/../agents/${imm_jar} ${local_imm_jar}
+    (time mvn edu.lazymop.tinymop:imm-plugin:1.0-SNAPSHOT:run ${SKIP} -Dsurefire.exitTimeout=172800 -Dmaven.ext.class.path=${SCRIPT_DIR}/../extensions/tinymop-extension-1.0.jar -DtracesDir="$(pwd)/tinymop-logs/tinymop-traces" -Dstats=true -DagentPath=${local_imm_jar}) &> tinymop-logs/${filename}
     status=$?
     tail -n 10 tinymop-logs/${filename} | grep "BUILD"
     echo "IMM Time: $(echo "$(tail tinymop-logs/${filename} | grep "real" | cut -d $'\t' -f 2 | cut -d 's' -f 1 | cut -d 'm' -f 1)*60+$(tail tinymop-logs/${filename} | grep "real" | cut -d $'\t' -f 2 | cut -d 's' -f 1 | cut -d 'm' -f 2)" | bc -l) sec and IMM status: ${status}"

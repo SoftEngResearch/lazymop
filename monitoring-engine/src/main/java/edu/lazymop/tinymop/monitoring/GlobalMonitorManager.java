@@ -47,7 +47,9 @@ public class GlobalMonitorManager {
             } catch (IOException ignored) {
                 // Nothing we can do here
             }
-            registerTestMapShutdownHook();
+            if (testTrackingEnabled) {
+                registerTestMapShutdownHook();
+            }
         }
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -137,7 +139,8 @@ public class GlobalMonitorManager {
 
     private static void writeTestMapToDisk() {
         synchronized (TEST_MAP_LOCK) {
-            if (testIDToName.isEmpty()) {
+            // Only write if test tracking was enabled at build time
+            if (!testTrackingEnabled || testIDToName.isEmpty()) {
                 return;
             }
             try (FileWriter fw = new FileWriter(SpecializedSlicingAlgorithmUtil.getTestFile(), false)) {
