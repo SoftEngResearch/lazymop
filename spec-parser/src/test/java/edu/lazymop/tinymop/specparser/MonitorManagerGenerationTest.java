@@ -75,7 +75,7 @@ public class MonitorManagerGenerationTest {
         RVMParser.processSpecFile(rvmFile, parser.getOutputDirectory(), Main.options.verbose);
         StandaloneRVMProcessor processor = RVMParser.processor;
         SlicerGenerationUtil slicerGenUtil = new SlicerGenerationUtil(processor.getName(),
-                processor.getRvmSpecFile(), processor.getMonitorData());
+                processor.getRvmSpecFile(), processor.getMonitorData(), true);
         try (BufferedWriter writer = getWriter(outPath)) {
             writer.write(new MonitorManagerGenerator(slicerGenUtil, processor.getMonitorData()).generateManagerCode());
         } catch (IOException ioe) {
