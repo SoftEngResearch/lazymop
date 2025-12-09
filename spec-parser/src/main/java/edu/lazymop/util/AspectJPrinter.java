@@ -88,7 +88,7 @@ public class AspectJPrinter {
         ret += "}\n";
         ret += "\n";
 
-        ret += "public int getLocation(JoinPoint.StaticPart jp) {\n"
+        ret += "public int getLocation(JoinPoint.StaticPart jp, JoinPoint.StaticPart jp2) {\n"
                 + "\t\tint id = jp.getId();\n"
                 + "\t\tif (visited[id]) {\n"
                 + "\t\t\treturn id;\n"
@@ -96,13 +96,14 @@ public class AspectJPrinter {
                 + "\t\tvisited[id] = true;\n"
                 + "\t\t\n"
                 + "\t\tSourceLocation loc = jp.getSourceLocation();\n"
+                + "\t\tSourceLocation loc2 = jp2.getSourceLocation();\n"
                 + "\t\tif (loc == null) {\n"
                 + "\t\t\t" + specName + "MonitorManager.getManagerInstance().notifyMapping(id, \"UNKNOWN\", false);\n"
                 + "\t\t\treturn id;\n"
                 + "\t\t}\n"
                 + "\t\tString klass = loc.getWithinType().getName();\n"
-                + "\t\tString location = klass + \".\" + jp.getSignature().getName()"
-                + "+ \":\" + loc.getFileName() + \":\" + loc.getLine();\n"
+                + "\t\tString location = klass + \".\" + jp2.getSignature().getName()"
+                + "+ \":\" + loc.getFileName() + \":\" + loc.getLine() + \":\" + loc2.getLine();\n"
                 + "boolean fromChangedClass = GlobalMonitorManager.isChangedMethods(klass);\n"
                 + "\t\t" + specName + "MonitorManager.getManagerInstance().notifyMapping(id, location, fromChangedClass);\n"
                 + "\t\treturn id;\n"
@@ -160,13 +161,12 @@ public class AspectJPrinter {
             // Replace RuntimeMonitor with MonitorManager, add getLocation(thisJoinPointStaticPart), false to argument
             for (String line : endThread.printAdvices().split("\n")) {
                 if (line.contains(specName + "RuntimeMonitor")) {
-                    boolean addComma = !line.contains("(thisJoinPointStaticPart");
+                    boolean addComma = !line.contains("(thisJoinPointStaticPart, thisEnclosingJoinPointStaticPart)");
                     ret += line.replace(specName + "RuntimeMonitor." + specName + "_",
                                     cleanSpecName + "MonitorManager.getManagerInstance().")
-                            .replace("thisJoinPointStaticPart, thisEnclosingJoinPointStaticPart, ", "thisJoinPointStaticPart, ")
-                            .replace("thisEnclosingJoinPointStaticPart, ", "")
+                            .replace("thisJoinPointStaticPart, thisEnclosingJoinPointStaticPart, ", "")
                             .replace(");", (addComma ? ", " : "")
-                                    + "getLocation(thisJoinPointStaticPart), false);")
+                                    + "getLocation(thisJoinPointStaticPart, thisEnclosingJoinPointStaticPart), false);")
                             + "\n";
                 } else {
                     ret += line + "\n";
@@ -179,13 +179,12 @@ public class AspectJPrinter {
             // Replace RuntimeMonitor with MonitorManager, add getLocation(thisJoinPointStaticPart), false to argument
             for (String line : startThread.printAdvices().split("\n")) {
                 if (line.contains(specName + "RuntimeMonitor")) {
-                    boolean addComma = !line.contains("(thisJoinPointStaticPart");
+                    boolean addComma = !line.contains("(thisJoinPointStaticPart, thisEnclosingJoinPointStaticPart)");
                     ret += line.replace(specName + "RuntimeMonitor." + specName + "_",
                             cleanSpecName + "MonitorManager.getManagerInstance().")
-                            .replace("thisJoinPointStaticPart, thisEnclosingJoinPointStaticPart, ", "thisJoinPointStaticPart, ")
-                            .replace("thisEnclosingJoinPointStaticPart, ", "")
+                            .replace("thisJoinPointStaticPart, thisEnclosingJoinPointStaticPart, ", "")
                             .replace(");", (addComma ? ", " : "")
-                                    + "getLocation(thisJoinPointStaticPart), false);")
+                                    + "getLocation(thisJoinPointStaticPart, thisEnclosingJoinPointStaticPart), false);")
                             + "\n";
                 } else {
                     ret += line + "\n";
@@ -194,9 +193,6 @@ public class AspectJPrinter {
             ret += "\n";
         }
         ret += eventManager.getEndProgramEvent().printHookThread();
-
-        // Normalize any lingering tgetLocation to getLocation to stay consistent with the runtime.
-        ret = ret.replace("tgetLocation(thisJoinPointStaticPart)", "getLocation(thisJoinPointStaticPart)");
 
         return ret;
     }
@@ -321,12 +317,6 @@ public class AspectJPrinter {
                 }
             }
 
-            // joonhwan: add Thread.currentThread() to the argument list for startEvent
-            if (event.getId().equals("startEvent")) {
-                ret += (hasArgument ? ", " : "") + "Thread.currentThread()";
-                hasArgument = true;
-            }
-
             // __STATICSIG should be passed as an argument because rv-monitor cannot infer
             if (event.has__STATICSIG()) {
                 hasArgument = true;
@@ -343,7 +333,7 @@ public class AspectJPrinter {
                 ret += ", ";
             }
 
-            ret += "getLocation(thisJoinPointStaticPart), " + event.isStartEvent();
+            ret += "getLocation(thisJoinPointStaticPart, thisEnclosingJoinPointStaticPart), " + event.isStartEvent();
 
             ret += ");\n";
 
