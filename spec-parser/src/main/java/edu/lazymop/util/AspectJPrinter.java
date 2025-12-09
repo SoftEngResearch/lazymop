@@ -108,6 +108,9 @@ public class AspectJPrinter {
                 + "\t\treturn id;\n"
                 + "\t}\n\n";
 
+        // Older generated aspects (e.g., TraceMOP track templates) expect tgetLocation; keep an alias for compatibility.
+        ret += "public int tgetLocation(JoinPoint.StaticPart jp) { return getLocation(jp); }\n\n";
+
         ret += aspect.statManager.advice();
 
         ret += aspect.lockManager.decl();
@@ -194,6 +197,9 @@ public class AspectJPrinter {
             ret += "\n";
         }
         ret += eventManager.getEndProgramEvent().printHookThread();
+
+        // Normalize any lingering tgetLocation to getLocation to stay consistent with the runtime.
+        ret = ret.replace("tgetLocation(thisJoinPointStaticPart)", "getLocation(thisJoinPointStaticPart)");
 
         return ret;
     }
