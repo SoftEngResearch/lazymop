@@ -131,6 +131,7 @@ public class SpecializedSlicingAlgorithmUtil {
                 long end = System.nanoTime();
                 fw.write("MONITORING TIME: " + (end - begin) + System.lineSeparator());
                 fw.write("COLLECTING TIME: " + collectTime + System.lineSeparator());
+                fw.write("OK" + System.lineSeparator());
             } catch (IOException ioe) {
                 try (FileWriter fw = new FileWriter(getErrorFile(specName), false)) {
                     fw.write(ioe + "\n");
@@ -149,6 +150,7 @@ public class SpecializedSlicingAlgorithmUtil {
                         }
 
                         fw.write("Total " + totalBindings + " bindings" + System.lineSeparator());
+                        fw.write("OK" + System.lineSeparator());
                     } catch (IOException ioe) {
                         try (FileWriter fw = new FileWriter(getErrorFile(specName), false)) {
                             fw.write(ioe + "\n");
@@ -167,6 +169,7 @@ public class SpecializedSlicingAlgorithmUtil {
                         }
 
                         fw.write("Total " + totalNewBindings + " bindings" + System.lineSeparator());
+                        fw.write("OK" + System.lineSeparator());
                     } catch (IOException ioe) {
                         try (FileWriter fw = new FileWriter(getErrorFile(specName), false)) {
                             fw.write(ioe + "\n");
@@ -189,6 +192,7 @@ public class SpecializedSlicingAlgorithmUtil {
                             fw.write(traceId + " " + formatTestCounts(testCounts, testNames) + System.lineSeparator());
                             traceId += 1;
                         }
+                        fw.write("OK" + System.lineSeparator());
                     } catch (IOException ioe) {
                         try (FileWriter fw = new FileWriter(getErrorFile(specName), false)) {
                             fw.write(ioe + "\n");
@@ -205,6 +209,7 @@ public class SpecializedSlicingAlgorithmUtil {
                     for (Map.Entry<Integer, String> entry : monitorManager.locationsMapping.entrySet()) {
                         fw.write(entry.getKey() + " " + entry.getValue() + System.lineSeparator());
                     }
+                    fw.write("OK" + System.lineSeparator());
                 } catch (IOException ioe) {
                     try (FileWriter fw = new FileWriter(getErrorFile(specName), false)) {
                         fw.write(ioe + "\n");

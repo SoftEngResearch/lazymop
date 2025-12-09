@@ -19,15 +19,15 @@ public aspect Iterator_HasNextMonitorAspect implements com.runtimeverification.r
 	pointcut MOP_CommonPointCut() : !within(com.runtimeverification.rvmonitor.java.rt.RVMObject+) && !adviceexecution() && BaseAspect.notwithin();
 	pointcut Iterator_HasNext_next(Iterator i) : (call(* Iterator+.next()) && target(i)) && MOP_CommonPointCut();
 	before (Iterator i) : Iterator_HasNext_next(i) {
-		Iterator_HasNextRuntimeMonitor.Iterator_HasNext_nextEvent(thisJoinPointStaticPart, thisEnclosingJoinPointStaticPart, i);
+		Iterator_HasNextRuntimeMonitor.Iterator_HasNext_nextEvent(thisJoinPointStaticPart, i);
 	}
 
 	pointcut Iterator_HasNext_hasnexttrue(Iterator i) : (call(* Iterator+.hasNext()) && target(i)) && MOP_CommonPointCut();
 	after (Iterator i) returning (boolean b) : Iterator_HasNext_hasnexttrue(i) {
 		//Iterator_HasNext_hasnexttrue
-		Iterator_HasNextRuntimeMonitor.Iterator_HasNext_hasnexttrueEvent(thisJoinPointStaticPart, thisEnclosingJoinPointStaticPart, i, b);
+		Iterator_HasNextRuntimeMonitor.Iterator_HasNext_hasnexttrueEvent(thisJoinPointStaticPart, i, b);
 		//Iterator_HasNext_hasnextfalse
-		Iterator_HasNextRuntimeMonitor.Iterator_HasNext_hasnextfalseEvent(thisJoinPointStaticPart, thisEnclosingJoinPointStaticPart, i, b);
+		Iterator_HasNextRuntimeMonitor.Iterator_HasNext_hasnextfalseEvent(thisJoinPointStaticPart, i, b);
 	}
 
 }

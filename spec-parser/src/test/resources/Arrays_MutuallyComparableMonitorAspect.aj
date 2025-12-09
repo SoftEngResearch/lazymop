@@ -20,7 +20,7 @@ public aspect Arrays_MutuallyComparableMonitorAspect implements com.runtimeverif
 	pointcut MOP_CommonPointCut() : !within(com.runtimeverification.rvmonitor.java.rt.RVMObject+) && !adviceexecution() && BaseAspect.notwithin();
 	pointcut Arrays_MutuallyComparable_invalid_sort(Object[] arr, Comparator comp) : ((call(void Arrays.sort(Object[], Comparator)) || call(void Arrays.sort(Object[], int, int, Comparator))) && args(arr, .., comp)) && MOP_CommonPointCut();
 	before (Object[] arr, Comparator comp) : Arrays_MutuallyComparable_invalid_sort(arr, comp) {
-		Arrays_MutuallyComparableRuntimeMonitor.Arrays_MutuallyComparable_invalid_sortEvent(thisJoinPointStaticPart, thisEnclosingJoinPointStaticPart, arr, comp);
+		Arrays_MutuallyComparableRuntimeMonitor.Arrays_MutuallyComparable_invalid_sortEvent(thisJoinPointStaticPart, arr, comp);
 	}
 
 }
