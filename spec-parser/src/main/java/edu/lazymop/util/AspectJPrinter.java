@@ -108,9 +108,6 @@ public class AspectJPrinter {
                 + "\t\treturn id;\n"
                 + "\t}\n\n";
 
-        // Older generated aspects (e.g., TraceMOP track templates) expect tgetLocation; keep an alias for compatibility.
-        ret += "public int tgetLocation(JoinPoint.StaticPart jp) { return getLocation(jp); }\n\n";
-
         ret += aspect.statManager.advice();
 
         ret += aspect.lockManager.decl();
@@ -322,6 +319,12 @@ public class AspectJPrinter {
                         ret += ", " + throwParameters;
                     }
                 }
+            }
+
+            // joonhwan: add Thread.currentThread() to the argument list for startEvent
+            if (event.getId().equals("startEvent")) {
+                ret += (hasArgument ? ", " : "") + "Thread.currentThread()";
+                hasArgument = true;
             }
 
             // __STATICSIG should be passed as an argument because rv-monitor cannot infer
