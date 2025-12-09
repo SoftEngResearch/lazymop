@@ -8,7 +8,8 @@ function clone_repository() {
   pushd ${SCRIPT_DIR} &> /dev/null
   git clone https://github.com/SoftEngResearch/lazymop tinymop
   cd tinymop
-  git checkout fsm-fix
+  git checkout test-trace
+#   git checkout fsm-fix
   popd &> /dev/null
 }
 
