@@ -165,6 +165,10 @@ public class AspectJPrinter {
                     ret += line.replace(specName + "RuntimeMonitor." + specName + "_",
                                     cleanSpecName + "MonitorManager.getManagerInstance().")
                             .replace("thisJoinPointStaticPart, thisEnclosingJoinPointStaticPart, ", "")
+                            .replace("thisJoinPointStaticPart, thisEnclosingJoinPointStaticPart", "")
+                            // Newer JavaMOP outputs sometimes pass a single static part
+                            .replace("thisJoinPointStaticPart, ", "")
+                            .replace("(thisJoinPointStaticPart)", "()")
                             .replace(");", (addComma ? ", " : "")
                                     + "getLocation(thisJoinPointStaticPart, thisEnclosingJoinPointStaticPart), false);")
                             + "\n";
@@ -183,6 +187,10 @@ public class AspectJPrinter {
                     ret += line.replace(specName + "RuntimeMonitor." + specName + "_",
                             cleanSpecName + "MonitorManager.getManagerInstance().")
                             .replace("thisJoinPointStaticPart, thisEnclosingJoinPointStaticPart, ", "")
+                            .replace("thisJoinPointStaticPart, thisEnclosingJoinPointStaticPart", "")
+                            // Newer JavaMOP outputs sometimes pass a single static part
+                            .replace("thisJoinPointStaticPart, ", "")
+                            .replace("(thisJoinPointStaticPart)", "()")
                             .replace(");", (addComma ? ", " : "")
                                     + "getLocation(thisJoinPointStaticPart, thisEnclosingJoinPointStaticPart), false);")
                             + "\n";
