@@ -39,9 +39,9 @@ ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk
 
 # Install Maven 3.5.4 locally for user
 RUN \
-  wget http://mirrors.ibiblio.org/apache/maven/maven-3/3.8.9/binaries/apache-maven-3.8.9-bin.tar.gz && \
-  tar -xzf apache-maven-3.8.9-bin.tar.gz && mv apache-maven-3.8.9/ apache-maven/ && \
-  rm apache-maven-3.8.9-bin.tar.gz && \
+  wget http://mirrors.ibiblio.org/apache/maven/maven-3/3.8.15/binaries/apache-maven-3.8.15-bin.tar.gz && \
+  tar -xzf apache-maven-3.8.15-bin.tar.gz && mv apache-maven-3.8.15/ apache-maven/ && \
+  rm apache-maven-3.8.15-bin.tar.gz && \
   cd /home/tinymop && \
 # Set up the user's configurations
   tail -n +10 ~/.bashrc > ~/tmp-bashrc && \
