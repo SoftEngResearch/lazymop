@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -16,6 +17,9 @@ import edu.lazymop.tinymop.monitoring.util.SpecializedSlicingAlgorithmUtil;
 
 public class GlobalMonitorManager {
 
+    // Set by generated monitor managers to indicate if test tracking was compiled in
+    public static boolean testTrackingEnabled = false;
+    
     public static int currentRunningTest = 0;
     public static int nextTestID = 1;
     public static Map<Integer, Integer> locationToTestID = new HashMap<>();
@@ -25,6 +29,8 @@ public class GlobalMonitorManager {
     public static Map<Integer, String> testIDToName = new HashMap<>();
     public static boolean isMultiThreaded = false;
     private static Set<MonitorManager> registeredManagers;
+    private static final Object TEST_MAP_LOCK = new Object();
+    private static volatile boolean testMapShutdownHookRegistered = false;
 
     // initialized before any monitoring starts
     public static void initialize() {
@@ -35,27 +41,14 @@ public class GlobalMonitorManager {
     public static boolean registerManager(MonitorManager manager) {
         if (registeredManagers == null) {
             initialize();
-
-            /*
-            Runtime.getRuntime().addShutdownHook(new Thread() {
-                public void run() {
-                    // This shutdown hook is used to save testIDToName to disk
-                    try (FileWriter fw = new FileWriter(SpecializedSlicingAlgorithmUtil.getTestFile(), false)) {
-                        for (Map.Entry<Integer, String> entry : testIDToName.entrySet()) {
-                            fw.write(entry.getKey() + " " + entry.getValue() + System.lineSeparator());
-                        }
-                    } catch (IOException ignored) {
-                        // Nothing we can do here
-                    }
-                }
-            });
-             */
-
             uuid = UUID.randomUUID().toString();
             try {
                 Files.createDirectories(Paths.get(SpecializedSlicingAlgorithmUtil.getDirectory()));
             } catch (IOException ignored) {
                 // Nothing we can do here
+            }
+            if (testTrackingEnabled) {
+                registerTestMapShutdownHook();
             }
         }
 
@@ -70,15 +63,18 @@ public class GlobalMonitorManager {
     }
 
     public static void addRunningTest(String testName, int locationID) {
-        currentRunningTest = nextTestID;
-        locationToTestID.put(locationID, currentRunningTest);
-        testIDToName.put(currentRunningTest, testName);
-
-        nextTestID += 1;
+        synchronized (TEST_MAP_LOCK) {
+            currentRunningTest = nextTestID;
+            locationToTestID.put(locationID, currentRunningTest);
+            testIDToName.put(currentRunningTest, testName);
+            nextTestID += 1;
+        }
     }
 
     public static void updateRunningTest(int locationID) {
-        currentRunningTest = locationToTestID.getOrDefault(locationID, 0);
+        synchronized (TEST_MAP_LOCK) {
+            currentRunningTest = locationToTestID.getOrDefault(locationID, 0);
+        }
     }
 
     public static boolean isChangedMethods(String klass) {
@@ -107,5 +103,53 @@ public class GlobalMonitorManager {
         }
 
         return changedMethods.contains(klass);
+    }
+
+    public static Map<Integer, String> getTestNamesSnapshot() {
+        synchronized (TEST_MAP_LOCK) {
+            if (testIDToName.isEmpty()) {
+                return Collections.emptyMap();
+            }
+            return new HashMap<>(testIDToName);
+        }
+    }
+
+    public static String getTestName(int testId) {
+        synchronized (TEST_MAP_LOCK) {
+            return testIDToName.getOrDefault(testId, "N/A");
+        }
+    }
+
+    public static void persistTestMapping() {
+        writeTestMapToDisk();
+    }
+
+    private static void registerTestMapShutdownHook() {
+        if (testMapShutdownHookRegistered) {
+            return;
+        }
+        synchronized (TEST_MAP_LOCK) {
+            if (testMapShutdownHookRegistered) {
+                return;
+            }
+            Runtime.getRuntime().addShutdownHook(new Thread(GlobalMonitorManager::writeTestMapToDisk));
+            testMapShutdownHookRegistered = true;
+        }
+    }
+
+    private static void writeTestMapToDisk() {
+        synchronized (TEST_MAP_LOCK) {
+            // Only write if test tracking was enabled at build time
+            if (!testTrackingEnabled || testIDToName.isEmpty()) {
+                return;
+            }
+            try (FileWriter fw = new FileWriter(SpecializedSlicingAlgorithmUtil.getTestFile(), false)) {
+                for (Map.Entry<Integer, String> entry : testIDToName.entrySet()) {
+                    fw.write(entry.getKey() + " " + entry.getValue() + System.lineSeparator());
+                }
+            } catch (IOException ignored) {
+                // Nothing we can do here
+            }
+        }
     }
 }

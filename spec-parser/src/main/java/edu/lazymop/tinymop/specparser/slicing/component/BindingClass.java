@@ -52,27 +52,37 @@ public class BindingClass extends Component {
                 .setBody(cloneBody);
 
         // Clone monitor (and update current node's monitors count)
-        cloneBody.addStatement(new TryStmt()
-                .setTryBlock(new BlockStmt()
-                        // XXXMonitor ret = (XXXMonitor) super.clone();
-                        .addStatement(
-                                new AssignExpr(new VariableDeclarationExpr(
-                                        new ClassOrInterfaceType(null, getSliceClassName()), "ret"),
-                                        new CastExpr(
-                                                new ClassOrInterfaceType(null, getSliceClassName()),
-                                                new MethodCallExpr(new SuperExpr(), "clone")
-                                        ),
-                                        AssignExpr.Operator.ASSIGN
-                                )
+        BlockStmt tryBlock = new BlockStmt()
+                // XXXMonitor ret = (XXXMonitor) super.clone();
+                .addStatement(
+                        new AssignExpr(new VariableDeclarationExpr(
+                                new ClassOrInterfaceType(null, getSliceClassName()), "ret"),
+                                new CastExpr(
+                                        new ClassOrInterfaceType(null, getSliceClassName()),
+                                        new MethodCallExpr(new SuperExpr(), "clone")
+                                ),
+                                AssignExpr.Operator.ASSIGN
                         )
-                        // ret.node.monitor += 1;
-                        .addStatement(new AssignExpr(
-                                new FieldAccessExpr(new FieldAccessExpr(new NameExpr("ret"), "node"), "monitors"),
-                                new IntegerLiteralExpr("1"), AssignExpr.Operator.PLUS))
-                        // return ret;
-                        .addStatement(new ReturnStmt(new NameExpr("ret")))
-
                 )
+                // ret.node.monitor += 1;
+                .addStatement(new AssignExpr(
+                        new FieldAccessExpr(new FieldAccessExpr(new NameExpr("ret"), "node"), "monitors"),
+                        new IntegerLiteralExpr("1"), AssignExpr.Operator.PLUS));
+        
+        // Conditionally add test tracking
+        if (slicerGenUtil.shouldCollectTestTraces()) {
+            tryBlock.addStatement(new MethodCallExpr(
+                    new FieldAccessExpr(new NameExpr("ret"), "node"),
+                    "incrementTestCount",
+                    new NodeList<>(new FieldAccessExpr(new NameExpr("ret"), "testId"))
+            ));
+        }
+        
+        // return ret;
+        tryBlock.addStatement(new ReturnStmt(new NameExpr("ret")));
+        
+        cloneBody.addStatement(new TryStmt()
+                .setTryBlock(tryBlock)
                 .setCatchClauses(new NodeList<>(
                         new CatchClause(new Parameter(
                                 new ClassOrInterfaceType(null, "CloneNotSupportedException"), "e"),
@@ -151,6 +161,15 @@ public class BindingClass extends Component {
                         AssignExpr.Operator.MINUS
                 )
         ));
+        
+        // Conditionally add test tracking
+        if (slicerGenUtil.shouldCollectTestTraces()) {
+            seeMethodBody.addStatement(new MethodCallExpr(
+                    new NameExpr("node"),
+                    "decrementTestCount",
+                    new NodeList<>(new FieldAccessExpr(new ThisExpr(), "testId"))
+            ));
+        }
 
         // node = node.getNextNodeAfterSeeingEvent(eID);
         seeMethodBody.addStatement(new ExpressionStmt(
@@ -170,6 +189,16 @@ public class BindingClass extends Component {
                         AssignExpr.Operator.PLUS
                 )
         ));
+        
+        // Conditionally add test tracking
+        if (slicerGenUtil.shouldCollectTestTraces()) {
+            seeMethodBody.addStatement(new MethodCallExpr(
+                    new NameExpr("node"),
+                    "incrementTestCount",
+                    new NodeList<>(new FieldAccessExpr(new ThisExpr(), "testId"))
+            ));
+        }
+        
         klass.addMember(seeMethod);
 
         for (EventDefinition event : slicerGenUtil.getEvents()) {
@@ -249,11 +278,30 @@ public class BindingClass extends Component {
                 new NameExpr("node"),
                 AssignExpr.Operator.ASSIGN
         ));
+        
+        // Conditionally add test tracking
+        if (slicerGenUtil.shouldCollectTestTraces()) {
+            constructorBody.addStatement(new AssignExpr(
+                    new FieldAccessExpr(new ThisExpr(), "testId"),
+                    new FieldAccessExpr(new NameExpr("GlobalMonitorManager"), "currentRunningTest"),
+                    AssignExpr.Operator.ASSIGN
+            ));
+        }
+        
         constructorBody.addStatement(new AssignExpr(
                 new FieldAccessExpr(new FieldAccessExpr(new ThisExpr(), "node"), "monitors"),
                 new IntegerLiteralExpr("1"),
                 AssignExpr.Operator.PLUS
         ));
+        
+        // Conditionally add test tracking
+        if (slicerGenUtil.shouldCollectTestTraces()) {
+            constructorBody.addStatement(new MethodCallExpr(
+                    new FieldAccessExpr(new ThisExpr(), "node"),
+                    "incrementTestCount",
+                    new NodeList<>(new FieldAccessExpr(new ThisExpr(), "testId"))
+            ));
+        }
         constructorBody.addStatement(new AssignExpr(
                 new NameExpr("state"),
                 new IntegerLiteralExpr("0"),
@@ -285,6 +333,11 @@ public class BindingClass extends Component {
 
         // int state;
         bindingClass.addField(PrimitiveType.intType(), "state");
+        
+        // Conditionally add testId field
+        if (slicerGenUtil.shouldCollectTestTraces()) {
+            bindingClass.addField(PrimitiveType.intType(), "testId");
+        }
 
         // Trie.Node node;
         bindingClass.addField("Trie.Node", "node");

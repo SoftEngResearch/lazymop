@@ -28,12 +28,14 @@ public class SlicerGenerationUtil extends MonitorGenerationUtil {
     public EventHandlerUtil eventHandlerUtil;
     private RVMSpecFile rvmSpecFile;
     private RVMonitorSpec rvmMonitorSpec;
+    private boolean collectTestTraces;
 
 
 
-    public SlicerGenerationUtil(String name, RVMSpecFile rvmSpecFile, LogicRepositoryType monitorData) {
+    public SlicerGenerationUtil(String name, RVMSpecFile rvmSpecFile, LogicRepositoryType monitorData, boolean collectTestTraces) {
         super(name, monitorData);
         this.rvmSpecFile = rvmSpecFile;
+        this.collectTestTraces = collectTestTraces;
 
         if (rvmSpecFile.getSpecs().size() != 1) {
             throw new RuntimeException("SlicerGenerationUtil unable to find the right RVMonitorSpec in RVMSpecFile"
@@ -46,6 +48,10 @@ public class SlicerGenerationUtil extends MonitorGenerationUtil {
         } catch (RVMException rvmException) {
             throw new RuntimeException(rvmException);
         }
+    }
+
+    public boolean shouldCollectTestTraces() {
+        return collectTestTraces;
     }
 
     public List<EventDefinition> getEvents() {

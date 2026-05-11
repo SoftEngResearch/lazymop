@@ -21,14 +21,17 @@ grep "BUILD" gol-javaparser
 echo "STAGE 2: install javamop frontend"
 (
     if [ ! -d "tracemop" ]; then
-        git clone https://github.com/SoftEngResearch/tracemop
+        # git clone https://github.com/SoftEngResearch/tracemop
+        git clone https://github.com/SpoonJoon/tracemop
     fi
 
     echo "STAGE 2.1: install tracemop root"
     (
         cd tracemop
         # JOONHWAN: comment out to use old stack trace location reporting
-        # git checkout 3de76a81606fce70e893ab305320b310a614438a
+        #git checkout 3de76a81606fce70e893ab305320b310a614438a
+        # use fork with IO completion markers
+        git checkout io-ok-markers
         mvn install -DskipTests -DskipITs -Dit.skip
     )&> gol-tracemop
 

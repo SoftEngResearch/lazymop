@@ -320,11 +320,9 @@ public class MonitorGenerator {
                 MethodCallExpr onEntry = new MethodCallExpr(top, "onEntry");
                 onEntry.addArgument(monitorClassName + "::handler");
                 top = onEntry;
-            } else { // JOONHWAN: non violating states
-                Set<String> handledEvents = new HashSet<>();
+            } else {
                 for (Map.Entry<String, String> transition : monGenUtil.getTransitions().get(state).entrySet()) {
                     String event = transition.getKey();
-                    handledEvents.add(event);
                     String nextState = transition.getValue();
                     MethodCallExpr expr;
                     if (nextState.equals(state)) {
@@ -337,19 +335,6 @@ public class MonitorGenerator {
                         expr.addArgument("State." + nextState.toUpperCase());
                     }
                     top = expr;
-                }
-                // JOONHWAN: add ignore statements for all events the prior loop only handled transitions for events that are in the transitions map
-                // the transitions map uses the minimized FSM, but the instrumentation uses the original events from the spec file
-                // so we need to add ignore statements for all events that are not in the transitions map
-                // violating states are handled above so this won't lead to missed violations.
-                if (!monGenUtil.getCategory().equals("fail")) {
-                    for (String event : monGenUtil.getEventNames()) {
-                        if(!handledEvents.contains(event)) {
-                                MethodCallExpr ignoreExpr = new MethodCallExpr(top, "ignore");
-                                ignoreExpr.addArgument("Event." + eventNameToIDMapping.get(event));
-                                top = ignoreExpr;
-                        }
-                    }
                 }
             }
             block.addStatement(top);

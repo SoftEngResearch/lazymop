@@ -1,6 +1,8 @@
 package edu.lazymop.tinymop.monitoring.datastructure;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.eclipse.collections.impl.map.mutable.primitive.IntIntHashMap;
 
@@ -10,6 +12,7 @@ public class Trie {
         public int monitors = 0; // only used during trace collection
         public HashMap<Integer, Node> children = new HashMap<>();
         public IntIntHashMap childrenKeys = new IntIntHashMap();
+        private final IntIntHashMap testCounts = new IntIntHashMap();
 
         public Node(int event) {
             this.event = event;
@@ -31,6 +34,38 @@ public class Trie {
             children.put(event, nextEvent);
             childrenKeys.put(event, 0);
             return nextEvent;
+        }
+
+        public void incrementTestCount(int testId) {
+            if (testId <= 0) {
+                return;
+            }
+            testCounts.addToValue(testId, 1);
+        }
+
+        public void decrementTestCount(int testId) {
+            if (testId <= 0) {
+                return;
+            }
+            if (!testCounts.containsKey(testId)) {
+                return;
+            }
+            int newValue = testCounts.get(testId) - 1;
+            if (newValue <= 0) {
+                testCounts.remove(testId);
+            } else {
+                testCounts.put(testId, newValue);
+            }
+        }
+
+        public Map<Integer, Integer> snapshotTestCounts() {
+            if (testCounts.isEmpty()) {
+                return Collections.emptyMap();
+            }
+
+            Map<Integer, Integer> snapshot = new HashMap<>(testCounts.size());
+            testCounts.forEachKeyValue(snapshot::put);
+            return snapshot;
         }
     }
 

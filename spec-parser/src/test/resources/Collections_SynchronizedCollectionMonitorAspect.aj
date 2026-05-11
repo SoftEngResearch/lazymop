@@ -19,20 +19,20 @@ public aspect Collections_SynchronizedCollectionMonitorAspect implements com.run
 	pointcut MOP_CommonPointCut() : !within(com.runtimeverification.rvmonitor.java.rt.RVMObject+) && !adviceexecution() && BaseAspect.notwithin();
 	pointcut Collections_SynchronizedCollection_accessIter(Iterator iter) : (call(* Iterator.*(..)) && target(iter)) && MOP_CommonPointCut();
 	before (Iterator iter) : Collections_SynchronizedCollection_accessIter(iter) {
-		Collections_SynchronizedCollectionRuntimeMonitor.Collections_SynchronizedCollection_accessIterEvent(thisJoinPointStaticPart, thisEnclosingJoinPointStaticPart, iter);
+		Collections_SynchronizedCollectionRuntimeMonitor.Collections_SynchronizedCollection_accessIterEvent(thisJoinPointStaticPart, iter);
 	}
 
 	pointcut Collections_SynchronizedCollection_sync() : (call(* Collections.synchronizedCollection(Collection)) || call(* Collections.synchronizedSet(Set)) || call(* Collections.synchronizedSortedSet(SortedSet)) || call(* Collections.synchronizedList(List))) && MOP_CommonPointCut();
 	after () returning (Collection col) : Collections_SynchronizedCollection_sync() {
-		Collections_SynchronizedCollectionRuntimeMonitor.Collections_SynchronizedCollection_syncEvent(thisJoinPointStaticPart, thisEnclosingJoinPointStaticPart, col);
+		Collections_SynchronizedCollectionRuntimeMonitor.Collections_SynchronizedCollection_syncEvent(thisJoinPointStaticPart, col);
 	}
 
 	pointcut Collections_SynchronizedCollection_syncCreateIter(Collection col) : (call(* Collection+.iterator()) && target(col)) && MOP_CommonPointCut();
 	after (Collection col) returning (Iterator iter) : Collections_SynchronizedCollection_syncCreateIter(col) {
 		//Collections_SynchronizedCollection_syncCreateIter
-		Collections_SynchronizedCollectionRuntimeMonitor.Collections_SynchronizedCollection_syncCreateIterEvent(thisJoinPointStaticPart, thisEnclosingJoinPointStaticPart, col, iter);
+		Collections_SynchronizedCollectionRuntimeMonitor.Collections_SynchronizedCollection_syncCreateIterEvent(thisJoinPointStaticPart, col, iter);
 		//Collections_SynchronizedCollection_asyncCreateIter
-		Collections_SynchronizedCollectionRuntimeMonitor.Collections_SynchronizedCollection_asyncCreateIterEvent(thisJoinPointStaticPart, thisEnclosingJoinPointStaticPart, col, iter);
+		Collections_SynchronizedCollectionRuntimeMonitor.Collections_SynchronizedCollection_asyncCreateIterEvent(thisJoinPointStaticPart, col, iter);
 	}
 
 }

@@ -18,5 +18,6 @@ public abstract class RuntimeMonitor implements Cloneable {
         VIOLATING,
         VALIDATING,
         DONTKNOW,
+        FAIL,
     }
 }

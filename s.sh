@@ -2,11 +2,13 @@ SCRIPT_DIR=$(cd $(dirname $0) && pwd)
 FOR_IMM=$1
 ENABLE_ON_DEMAND_SYNC=$2
 ENABLE_INT_ENCODING=$3
+COLLECT_TEST_TRACES=${4:-true}
 
 echo "===== Settings ====="
 echo "FOR_IMM: ${FOR_IMM}"
 echo "ENABLE_ON_DEMAND_SYNC: ${ENABLE_ON_DEMAND_SYNC}"
 echo "ENABLE_INT_ENCODING: ${ENABLE_INT_ENCODING}"
+echo "COLLECT_TEST_TRACES: ${COLLECT_TEST_TRACES}"
 
 rm -rf out output && mkdir out output
 
@@ -17,10 +19,10 @@ if [[ $? -ne 0 ]]; then
 fi
 
 if [[ ${ENABLE_ON_DEMAND_SYNC} == "false" ]]; then
-    mvn -pl spec-parser exec:java -Dexec.mainClass="edu.lazymop.tinymop.specparser.Main" -Dexec.args="output props false"
+    mvn -pl spec-parser exec:java -Dexec.mainClass="edu.lazymop.tinymop.specparser.Main" -Dexec.args="output props false ${COLLECT_TEST_TRACES}"
     status=$?
 else
-    mvn -pl spec-parser exec:java -Dexec.mainClass="edu.lazymop.tinymop.specparser.Main" -Dexec.args="output props"
+    mvn -pl spec-parser exec:java -Dexec.mainClass="edu.lazymop.tinymop.specparser.Main" -Dexec.args="output props true ${COLLECT_TEST_TRACES}"
     status=$?
 fi
 
@@ -115,7 +117,11 @@ if [[ ${ENABLE_ON_DEMAND_SYNC} != "false" ]]; then
     cp ./spec-parser/src/main/resources/ThreadAspect.aj out/ThreadAspect.aj
 fi
 
-#cp ./spec-parser/src/main/resources/TestNameAspect.aj out/TestNameAspect.aj
+# copy TestNameAspect if test collection is enabled
+if [[ ${COLLECT_TEST_TRACES} != "false" ]]; then
+    cp ./spec-parser/src/main/resources/TestNameAspect.aj out/TestNameAspect.aj
+fi
+
 for spec in "${specs[@]}"; do
     spec=$(echo "${spec}" | cut -d '.' -f 1)
     echo "Adding BaseAspect for spec ${spec}"
@@ -137,13 +143,20 @@ if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
+# used to be 1.8
+ASPECTJ_HOME=${ASPECTJ_HOME:-$HOME/aspectj-1.9.7}
+if [[ ! -d "${ASPECTJ_HOME}/lib" ]]; then
+    echo "Missing AspectJ installation at ${ASPECTJ_HOME}. Set ASPECTJ_HOME to a valid path."
+    exit 1
+fi
+
 AGENT_PREP="agent-prep"
 rm -rf ${AGENT_PREP}
 mkdir ${AGENT_PREP}
 cp monitoring-engine/target/monitoring-engine-1.0-SNAPSHOT.jar ${AGENT_PREP}
 cp spec-parser/target/spec-parser-1.0-SNAPSHOT.jar ${AGENT_PREP}
-cp ~/aspectj1.8/lib/aspectjrt.jar ${AGENT_PREP}
-cp ~/aspectj1.8/lib/aspectjweaver.jar ${AGENT_PREP}
+cp ${ASPECTJ_HOME}/lib/aspectjrt.jar ${AGENT_PREP}
+cp ${ASPECTJ_HOME}/lib/aspectjweaver.jar ${AGENT_PREP}
 
 # 2. copy over compiled aspects
 

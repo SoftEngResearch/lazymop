@@ -86,7 +86,7 @@ public class SlicerGenerationTest {
         StandaloneRVMProcessor processor = RVMParser.processor;
        try {
            SlicerGenerationUtil slicerGenUtil = new SlicerGenerationUtil(processor.getName(),
-                   processor.getRvmSpecFile(), processor.getMonitorData());
+                   processor.getRvmSpecFile(), processor.getMonitorData(), true);
            try (BufferedWriter writer = getWriter(outPath)) {
                writer.write(new SlicerGenerator(slicerGenUtil, processor.getMonitorData()).generateSlicerCode());
            } catch (IOException ioe) {

@@ -13,12 +13,13 @@ import edu.lazymop.util.Logger;
 
 public class Main {
     public static boolean onDemandSync = true;
+    public static boolean collectTestTraces = true;
     private static final Logger LOGGER = Logger.getGlobal();
 
     // mvn compile exec:java -Dexec.mainClass="edu.lazymop.tinymop.specparser.Main" -Dexec.args="output props"
     public static void main(String[] args) {
         /*
-        Usage: <output directory> <props directory> [on-demand synchronization: true]
+        Usage: <output directory> <props directory> [on-demand synchronization: true] [collect test traces: true]
          */
         LOGGER.log(Level.INFO, "Initializing Spec Parser...");
         SpecParser parser = new SpecParser(false);
@@ -30,6 +31,11 @@ public class Main {
         if (args.length >= 3 && args[2].equals("false")) {
             LOGGER.log(Level.WARNING, "On-demand synchronization is disabled!");
             Main.onDemandSync = false;
+        }
+
+        if (args.length >= 4 && args[3].equals("false")) {
+            LOGGER.log(Level.WARNING, "Test trace collection is disabled!");
+            Main.collectTestTraces = false;
         }
 
         File outputDirectory = new File(args[0]);
