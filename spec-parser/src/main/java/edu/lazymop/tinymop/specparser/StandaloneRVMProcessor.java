@@ -50,6 +50,7 @@ public class StandaloneRVMProcessor {
     private String transitionTable;
 
     private LogicRepositoryType monitorData;
+    private boolean isRaw;
     private RVMSpecFile rvmSpecFile;
 
     private List<EnableSet> enableSets;
@@ -63,6 +64,7 @@ public class StandaloneRVMProcessor {
     public StandaloneRVMProcessor(String name, boolean verbose) {
         this.name = name;
         this.verbose = verbose;
+        isRaw = false;
         transitionTable = "";
         enableSets = new ArrayList<>();
     }
@@ -133,8 +135,9 @@ public class StandaloneRVMProcessor {
             }
             MonitorGenerator generator = new MonitorGenerator(monitorGenerationUtil, "/tmp/monitor.dot");
         } else {
+            isRaw = true;
             logic = "raw";
-            MonitorGenerationUtil monitorGenerationUtil = new MonitorGenerationUtil(name, rvmSpecFile);
+//            MonitorGenerationUtil monitorGenerationUtil = new MonitorGenerationUtil(name, rvmSpecFile);
         }
 
         // Do indentation
@@ -271,5 +274,9 @@ public class StandaloneRVMProcessor {
 
     public List<EnableSet> getEnableSets() {
         return enableSets;
+    }
+
+    public boolean isRawSpec() {
+        return isRaw;
     }
 }

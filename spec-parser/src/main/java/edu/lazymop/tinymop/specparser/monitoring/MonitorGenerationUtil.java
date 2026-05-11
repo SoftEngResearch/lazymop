@@ -37,6 +37,7 @@ public class MonitorGenerationUtil {
     protected String formula;
 
     private String enableSets;
+    private boolean isRaw;
 
     /**
      * Create a Monitor object, which hold data that will be used for Monitor code generation for non-raw specs.
@@ -56,6 +57,7 @@ public class MonitorGenerationUtil {
         this.defaultStates = obtainDefaultStates(formula, states);
         this.transitions = getTransitionsPerState(formula, states);
         this.enableSets = monitorData.getEnableSets();
+        this.isRaw = false;
 
         if (this.defaultStates.isEmpty() && !this.states.contains(this.startState)) {
             LOGGER.log(Level.WARNING, "Cannot find start state");
@@ -84,7 +86,8 @@ public class MonitorGenerationUtil {
     public MonitorGenerationUtil(String name, RVMSpecFile rvmSpecFile) {
         this.specName = name;
         this.eventNames = obtainEventNames(rvmSpecFile);
-        LOGGER.log(Level.INFO, "Event Names: " + this.eventNames + "\n");
+        this.isRaw = true;
+        LOGGER.log(Level.INFO, "(Raw Spec) Event Names: " + this.eventNames + "\n");
     }
 
     private Map<String, List<String>> fetchAliasedStates(List<String> message) {
@@ -222,5 +225,9 @@ public class MonitorGenerationUtil {
 
     public void setEnableSets(String enableSets) {
         this.enableSets = enableSets;
+    }
+
+    public boolean isRawSpec() {
+        return isRaw;
     }
 }

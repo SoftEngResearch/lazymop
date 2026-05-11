@@ -153,42 +153,54 @@ public class BindingClass extends Component {
                 .addParameter(PrimitiveType.intType(), "eID")
                 .setBody(seeMethodBody);
 
-        // this.monitor -= 1;
-        seeMethodBody.addStatement(new ExpressionStmt(
-                new AssignExpr(
-                        new FieldAccessExpr(new NameExpr("node"), "monitors"),
-                        new IntegerLiteralExpr("1"),
-                        AssignExpr.Operator.MINUS
-                )
-        ));
-        
-        // Conditionally add test tracking
-        if (slicerGenUtil.shouldCollectTestTraces()) {
-            seeMethodBody.addStatement(new MethodCallExpr(
-                    new NameExpr("node"),
-                    "decrementTestCount",
-                    new NodeList<>(new FieldAccessExpr(new ThisExpr(), "testId"))
+        if (!slicerGenUtil.isRawSpec()) {
+            // this.monitor -= 1;
+            seeMethodBody.addStatement(new ExpressionStmt(
+                    new AssignExpr(
+                            new FieldAccessExpr(new NameExpr("node"), "monitors"),
+                            new IntegerLiteralExpr("1"),
+                            AssignExpr.Operator.MINUS
+                    )
+            ));
+
+            // Conditionally add test tracking
+            if (slicerGenUtil.shouldCollectTestTraces()) {
+                seeMethodBody.addStatement(new MethodCallExpr(
+                        new NameExpr("node"),
+                        "decrementTestCount",
+                        new NodeList<>(new FieldAccessExpr(new ThisExpr(), "testId"))
+                ));
+            }
+        }
+
+        // node = node.getNextNodeAfterSeeingEvent(eID); or node.seeingEvent(eID);
+        if (slicerGenUtil.isRawSpec()) {
+            seeMethodBody.addStatement(new ExpressionStmt(
+                        new MethodCallExpr(new NameExpr("node"), "seeingEvent",
+                                new NodeList<>(new NameExpr("eID"))
+                    )
+            ));
+        } else {
+            seeMethodBody.addStatement(new ExpressionStmt(
+                    new AssignExpr(
+                            new NameExpr("node"),
+                            new MethodCallExpr(new NameExpr("node"), "getNextNodeAfterSeeingEvent",
+                                    new NodeList<>(new NameExpr("eID"))),
+                            AssignExpr.Operator.ASSIGN
+                    )
             ));
         }
 
-        // node = node.getNextNodeAfterSeeingEvent(eID);
-        seeMethodBody.addStatement(new ExpressionStmt(
-                new AssignExpr(
-                        new NameExpr("node"),
-                        new MethodCallExpr(new NameExpr("node"), "getNextNodeAfterSeeingEvent",
-                                new NodeList<>(new NameExpr("eID"))),
-                        AssignExpr.Operator.ASSIGN
-                )
-        ));
-
-        // this.monitor += 1;
-        seeMethodBody.addStatement(new ExpressionStmt(
-                new AssignExpr(
-                        new FieldAccessExpr(new NameExpr("node"), "monitors"),
-                        new IntegerLiteralExpr("1"),
-                        AssignExpr.Operator.PLUS
-                )
-        ));
+        if (!slicerGenUtil.isRawSpec()) {
+            // this.monitor += 1;
+            seeMethodBody.addStatement(new ExpressionStmt(
+                    new AssignExpr(
+                            new FieldAccessExpr(new NameExpr("node"), "monitors"),
+                            new IntegerLiteralExpr("1"),
+                            AssignExpr.Operator.PLUS
+                    )
+            ));
+        }
         
         // Conditionally add test tracking
         if (slicerGenUtil.shouldCollectTestTraces()) {
@@ -253,9 +265,15 @@ public class BindingClass extends Component {
         }
 
         BlockStmt constructorBody = new BlockStmt();
-        constructor
-                .addParameter(new Parameter(new ClassOrInterfaceType(null, "Trie.Node"), "node"))
-                .setBody(constructorBody);
+        if (slicerGenUtil.isRawSpec()) {
+            constructor
+                    .addParameter(new Parameter(new ClassOrInterfaceType(null, "LinearTrie.LinearNode"), "node"))
+                    .setBody(constructorBody);
+        } else {
+            constructor
+                    .addParameter(new Parameter(new ClassOrInterfaceType(null, "Trie.Node"), "node"))
+                    .setBody(constructorBody);
+        }
 
         if (feature.isTimeTrackingNeeded()) {
             constructorBody.addStatement(new AssignExpr(
@@ -339,8 +357,13 @@ public class BindingClass extends Component {
             bindingClass.addField(PrimitiveType.intType(), "testId");
         }
 
-        // Trie.Node node;
-        bindingClass.addField("Trie.Node", "node");
+        if (slicerGenUtil.isRawSpec()) {
+            // LinearTrie.LinearNode node;
+            bindingClass.addField("LinearTrie.LinearNode", "node");
+        } else {
+            // Trie.Node node;
+            bindingClass.addField("Trie.Node", "node");
+        }
 
         if (feature.isTimeTrackingNeeded()) {
             // private final long tau;

@@ -23,9 +23,15 @@ public class Field extends Component {
 
     @Override
     public void add() {
-        klass.addFieldWithInitializer("Trie", "trie",
-                new ObjectCreationExpr().setType("Trie"),
-                Modifier.Keyword.PRIVATE, Modifier.Keyword.STATIC);
+        if (!slicerGenUtil.isRawSpec()) {
+            klass.addFieldWithInitializer("Trie", "trie",
+                    new ObjectCreationExpr().setType("Trie"),
+                    Modifier.Keyword.PRIVATE, Modifier.Keyword.STATIC);
+        } else {
+            klass.addFieldWithInitializer("LinearTrie", "trie",
+                    new ObjectCreationExpr().setType("LinearTrie"),
+                    Modifier.Keyword.PRIVATE, Modifier.Keyword.STATIC);
+        }
 
         klass.addFieldWithInitializer("ReentrantLock", "lock",
                 new ObjectCreationExpr().setType("ReentrantLock"),

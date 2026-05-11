@@ -140,11 +140,13 @@ public class MonitorGenerator {
         );
         body.addStatement(setEmptyTrace);
 
-        FieldAccessExpr automatonField = new FieldAccessExpr(new ThisExpr(), "automaton");
-        Statement assignAutomaton = new ExpressionStmt(new AssignExpr(
-                automatonField, getStateMachineObject(body),
-                AssignExpr.Operator.ASSIGN));
-        body.addStatement(assignAutomaton);
+        if (!monGenUtil.isRawSpec()) {
+            FieldAccessExpr automatonField = new FieldAccessExpr(new ThisExpr(), "automaton");
+            Statement assignAutomaton = new ExpressionStmt(new AssignExpr(
+                    automatonField, getStateMachineObject(body),
+                    AssignExpr.Operator.ASSIGN));
+            body.addStatement(assignAutomaton);
+        }
 
         // this.verdict = VerdictCategory.DONTKNOW
         AssignExpr setVerdict = new AssignExpr(
@@ -158,6 +160,9 @@ public class MonitorGenerator {
     }
 
     private void addEventRunner(ClassOrInterfaceDeclaration klass) {
+        if (monGenUtil.isRawSpec()) {
+            return;
+        }
         MethodDeclaration method = new MethodDeclaration(Modifier.createModifierList(Modifier.Keyword.PUBLIC),
                 new VoidType(), "runAutomatonOnEvents");
         String trace = "trace";
@@ -186,6 +191,9 @@ public class MonitorGenerator {
     }
 
     private void addStringRunner(ClassOrInterfaceDeclaration klass) {
+        if (monGenUtil.isRawSpec()) {
+            return;
+        }
         ClassOrInterfaceType returnType = new ClassOrInterfaceType("VerdictCategory");
         MethodDeclaration method = new MethodDeclaration(Modifier.createModifierList(Modifier.Keyword.PUBLIC),
                 returnType, "runAutomatonOnStrings");
@@ -238,6 +246,9 @@ public class MonitorGenerator {
     }
 
     private void addHandler(ClassOrInterfaceDeclaration klass) {
+        if (monGenUtil.isRawSpec()) {
+            return;
+        }
         MethodDeclaration method = new MethodDeclaration(
                 Modifier.createModifierList(Modifier.Keyword.PRIVATE, Modifier.Keyword.STATIC),
                 new VoidType(), "handler");
@@ -278,6 +289,10 @@ public class MonitorGenerator {
     }
 
     private void addAutomatonBuilder(ClassOrInterfaceDeclaration klass) {
+        if (monGenUtil.isRawSpec()) {
+            return;
+        }
+
         ClassOrInterfaceType returnType = new ClassOrInterfaceType("StateMachine<State, Event>");
         MethodDeclaration method = new MethodDeclaration(Modifier.createModifierList(Modifier.Keyword.PRIVATE),
                 returnType, "buildAutomaton");
@@ -295,9 +310,9 @@ public class MonitorGenerator {
             configure.addArgument("State." + state.toUpperCase());
             Expression top = configure;
             if ((monGenUtil.getCategory().equals("violation") && state.equals(monGenUtil.getCategory()))
-                || monGenUtil.getCategory().equals("match") && isAliasedToCategory(state, monGenUtil.getCategory())
-                || monGenUtil.getCategory().equals("err") && state.equals(monGenUtil.getCategory())
-                || monGenUtil.getCategory().equals("unsafe") && state.equals(monGenUtil.getCategory())) {
+                    || monGenUtil.getCategory().equals("match") && isAliasedToCategory(state, monGenUtil.getCategory())
+                    || monGenUtil.getCategory().equals("err") && state.equals(monGenUtil.getCategory())
+                    || monGenUtil.getCategory().equals("unsafe") && state.equals(monGenUtil.getCategory())) {
                 // this is the "violating state"
                 Collection<String> transitions = monGenUtil.getTransitions().get(state).values();
                 if (!transitions.isEmpty()) {
@@ -476,6 +491,8 @@ public class MonitorGenerator {
     }
 
     private void populateStateEnum(EnumDeclaration enumDeclaration, Collection<String> states) {
+        if (monGenUtil.isRawSpec()) return;
+
         for (String state : states) {
             enumDeclaration.addEntry(new EnumConstantDeclaration(state.toUpperCase()));
         }

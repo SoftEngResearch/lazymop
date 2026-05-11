@@ -18,9 +18,12 @@ import java.util.Stack;
 
 import edu.lazymop.tinymop.monitoring.GlobalMonitorManager;
 import edu.lazymop.tinymop.monitoring.MonitorManager;
+import edu.lazymop.tinymop.monitoring.datastructure.LinearTrie;
 import edu.lazymop.tinymop.monitoring.datastructure.Pair;
 import edu.lazymop.tinymop.monitoring.datastructure.Trie;
 import edu.lazymop.tinymop.specparser.monitoring.RuntimeMonitor;
+import org.eclipse.collections.api.block.procedure.primitive.IntIntProcedure;
+import org.eclipse.collections.api.iterator.IntIterator;
 
 public class SpecializedSlicingAlgorithmUtil {
 
@@ -42,103 +45,152 @@ public class SpecializedSlicingAlgorithmUtil {
             List<String> tracesFromChangedClasses = new ArrayList<>();
             int totalBindings = 0;
             int totalNewBindings = 0;
-            Map<RuntimeMonitor.VerdictCategory, Set<String>> verdicts = new HashMap<>();
-            Stack<Pair> stack = new Stack<>();
-            stack.add(new Pair(root, null));
 
-            // Need to map monitorableTrace from ID back to event
-            while (!stack.isEmpty()) {
-                Pair obj = stack.pop();
-                if (obj.node.event > 0) {
-                    int result = obj.node.event;
-                    int eventName = result & 15;
-                    int location = result >> 4;
-                    String event = "E" + eventName + "~" + location;
-                    if (obj.events == null) {
-                        obj.events = new ArrayList<>();
-                        obj.events.add(event);
-                    } else {
-                        obj.events.add(event);
+
+            if (root instanceof LinearTrie.LinearNode) {
+                // Raw spec
+                try (FileWriter fw = new FileWriter(getViolationFile(specName), false)) {
+                    LinearTrie.LinearNode linearRoot = (LinearTrie.LinearNode) root;
+                    if (!linearRoot.violatingEvents.isEmpty()) {
+                        IntIterator it = linearRoot.violatingEvents.keySet().intIterator();
+                        while (it.hasNext()) {
+                            int result = it.next();
+                            int frequency = linearRoot.violatingEvents.get(result);
+
+                            int eventName = result & 15;
+                            int location = result >> 4;
+                            String event = "E" + eventName + "~" + location;
+
+                            fw.write(event + "," + frequency + System.lineSeparator());
+                        }
                     }
-                    if (monitorManager.locationsInChangedClasses[location]) {
-                        obj.fromChangedClasses = true;
+
+                    long end = System.nanoTime();
+                    fw.write("MONITORING TIME: " + (end - begin) + System.lineSeparator());
+                    fw.write("COLLECTING TIME: " + collectTime + System.lineSeparator());
+                    fw.write("OK" + System.lineSeparator());
+
+                    // Put trace into String
+                    Set<Integer> changedEventsLocation = new HashSet<>();
+                    String trace = compactRawTraceBody(linearRoot.events, monitorManager, changedEventsLocation);
+                    traces.add(trace);
+                    totalBindings = 1;
+                    if (!changedEventsLocation.isEmpty()) {
+                        tracesFromChangedClasses.add(trace);
+                        totalNewBindings = 1;
+                    }
+
+                    if (traceTestFrequencies != null) {
+                        traceTestFrequencies.put(trace, linearRoot.snapshotTestCounts());
+                    }
+                } catch (IOException ioe) {
+                    try (FileWriter fw = new FileWriter(getErrorFile(specName), false)) {
+                        fw.write(ioe + "\n");
+                        fw.write(ioe.getMessage() + "\n");
+                        fw.write(ioe.toString());
+                    } catch (IOException ignored) {
+                        // Nothing we can do here
                     }
                 }
+            } else {
+                Map<RuntimeMonitor.VerdictCategory, Set<String>> verdicts = new HashMap<>();
+                Stack<Pair> stack = new Stack<>();
+                stack.add(new Pair(root, null));
 
-                if (obj.node.monitors > 0 && obj.events != null) {
-                    // need to check obj.events != null, because specs like ShutdownHookLateRegister can have monitor
-                    // without event
-                    collectTime += (System.nanoTime() - checkpoint);
-                    RuntimeMonitor monitor = monitorManager.createMonitor();
-                    List<String> monitorableTrace = getMonitorableTrace(obj.events);
-                    RuntimeMonitor.VerdictCategory verdict;
-                    try {
-                        verdict = monitorManager.runTraceOnMonitor(monitor, monitorableTrace);
-                    } catch (IllegalStateException ex) {
-                        verdict = RuntimeMonitor.VerdictCategory.FAIL;
-                    }
-
-                    if (!verdicts.containsKey(verdict)) {
-                        verdicts.put(verdict, new HashSet<>());
-                    }
-                    String traceBody = compactTraceBody(obj.events);
-                    String traceInString = obj.node.monitors + " " + traceBody;
-                    verdicts.get(verdict).add(traceInString);
-                    if (collect) {
-                        if (traceTestFrequencies != null) {
-                            Map<Integer, Integer> perTraceTests = traceTestFrequencies
-                                    .computeIfAbsent(traceBody, key -> new HashMap<>());
-                            mergeTestCounts(perTraceTests, obj.node.snapshotTestCounts());
-                        }
-                        if (obj.fromChangedClasses) {
-                            tracesFromChangedClasses.add(traceInString);
-                            totalNewBindings += obj.node.monitors;
+                // Need to map monitorableTrace from ID back to event
+                while (!stack.isEmpty()) {
+                    Pair obj = stack.pop();
+                    if (obj.node.event > 0) {
+                        int result = obj.node.event;
+                        int eventName = result & 15;
+                        int location = result >> 4;
+                        String event = "E" + eventName + "~" + location;
+                        if (obj.events == null) {
+                            obj.events = new ArrayList<>();
+                            obj.events.add(event);
                         } else {
-                            traces.add(traceInString);
+                            obj.events.add(event);
+                        }
+                        if (monitorManager.locationsInChangedClasses[location]) {
+                            obj.fromChangedClasses = true;
+                        }
+                    }
+
+                    if (obj.node.monitors > 0 && obj.events != null) {
+                        // need to check obj.events != null, because specs like ShutdownHookLateRegister can have monitor
+                        // without event
+                        collectTime += (System.nanoTime() - checkpoint);
+                        RuntimeMonitor monitor = monitorManager.createMonitor();
+                        List<String> monitorableTrace = getMonitorableTrace(obj.events);
+                        RuntimeMonitor.VerdictCategory verdict;
+                        try {
+                            verdict = monitorManager.runTraceOnMonitor(monitor, monitorableTrace);
+                        } catch (IllegalStateException ex) {
+                            verdict = RuntimeMonitor.VerdictCategory.FAIL;
                         }
 
-                        totalBindings += obj.node.monitors;
-                    }
-                    checkpoint = System.nanoTime();
-                }
+                        if (!verdicts.containsKey(verdict)) {
+                            verdicts.put(verdict, new HashSet<>());
+                        }
+                        String traceBody = compactTraceBody(obj.events);
+                        String traceInString = obj.node.monitors + " " + traceBody;
+                        verdicts.get(verdict).add(traceInString);
+                        if (collect) {
+                            if (traceTestFrequencies != null) {
+                                Map<Integer, Integer> perTraceTests = traceTestFrequencies
+                                        .computeIfAbsent(traceBody, key -> new HashMap<>());
+                                mergeTestCounts(perTraceTests, obj.node.snapshotTestCounts());
+                            }
+                            if (obj.fromChangedClasses) {
+                                tracesFromChangedClasses.add(traceInString);
+                                totalNewBindings += obj.node.monitors;
+                            } else {
+                                traces.add(traceInString);
+                            }
 
-                if (obj.events == null) {
-                    for (Trie.Node child : obj.node.children.values()) {
-                        stack.add(new Pair(child, null));
+                            totalBindings += obj.node.monitors;
+                        }
+                        checkpoint = System.nanoTime();
                     }
-                } else {
-                    if (obj.node.children.size() > 1) {
+
+                    if (obj.events == null) {
                         for (Trie.Node child : obj.node.children.values()) {
-                            stack.add(new Pair(child, new ArrayList<>(obj.events)));
+                            stack.add(new Pair(child, null));
                         }
-                    } else if (obj.node.children.size() == 1) {
-                        for (Trie.Node child : obj.node.children.values()) {
-                            // Don't need to duplicate events because no one is using it
-                            stack.add(new Pair(child, obj.events));
+                    } else {
+                        if (obj.node.children.size() > 1) {
+                            for (Trie.Node child : obj.node.children.values()) {
+                                stack.add(new Pair(child, new ArrayList<>(obj.events)));
+                            }
+                        } else if (obj.node.children.size() == 1) {
+                            for (Trie.Node child : obj.node.children.values()) {
+                                // Don't need to duplicate events because no one is using it
+                                stack.add(new Pair(child, obj.events));
+                            }
                         }
                     }
                 }
-            }
 
-            try (FileWriter fw = new FileWriter(getViolationFile(specName), false)) {
-                for (RuntimeMonitor.VerdictCategory verdict : verdicts.keySet()) {
-                    if (verdict.equals(RuntimeMonitor.VerdictCategory.VIOLATING)) {
-                        for (String trace : verdicts.get(verdict)) {
-                            fw.write(trace + System.lineSeparator());
+                try (FileWriter fw = new FileWriter(getViolationFile(specName), false)) {
+                    for (RuntimeMonitor.VerdictCategory verdict : verdicts.keySet()) {
+                        if (verdict.equals(RuntimeMonitor.VerdictCategory.VIOLATING)) {
+                            for (String trace : verdicts.get(verdict)) {
+                                fw.write(trace + System.lineSeparator());
+                            }
                         }
                     }
-                }
-                long end = System.nanoTime();
-                fw.write("MONITORING TIME: " + (end - begin) + System.lineSeparator());
-                fw.write("COLLECTING TIME: " + collectTime + System.lineSeparator());
-                fw.write("OK" + System.lineSeparator());
-            } catch (IOException ioe) {
-                try (FileWriter fw = new FileWriter(getErrorFile(specName), false)) {
-                    fw.write(ioe + "\n");
-                    fw.write(ioe.getMessage() + "\n");
-                    fw.write(ioe.toString());
-                } catch (IOException ignored) {
-                    // Nothing we can do here
+                    long end = System.nanoTime();
+                    fw.write("MONITORING TIME: " + (end - begin) + System.lineSeparator());
+                    fw.write("COLLECTING TIME: " + collectTime + System.lineSeparator());
+                    fw.write("OK" + System.lineSeparator());
+                } catch (IOException ioe) {
+                    try (FileWriter fw = new FileWriter(getErrorFile(specName), false)) {
+                        fw.write(ioe + "\n");
+                        fw.write(ioe.getMessage() + "\n");
+                        fw.write(ioe.toString());
+                    } catch (IOException ignored) {
+                        // Nothing we can do here
+                    }
                 }
             }
 
@@ -264,6 +316,39 @@ public class SpecializedSlicingAlgorithmUtil {
             builder.append(lastEvent).append("x").append(lastEventFrequency);
         } else {
             builder.append(lastEvent);
+        }
+
+        builder.append("]");
+        return builder.toString();
+    }
+
+    private static String compactRawTraceBody(List<LinearTrie.RawEventNode> events, MonitorManager monitorManager, Set<Integer> changedEventsLocation) {
+        if (events == null || events.isEmpty()) {
+            return "[]";
+        }
+
+        StringBuilder builder = new StringBuilder();
+        builder.append("[");
+
+        boolean firstEvent = true;
+        for (LinearTrie.RawEventNode event : events) {
+            if (firstEvent) {
+                firstEvent = false;
+            } else {
+                builder.append(", ");
+            }
+
+            int location = event.event >> 4;
+            String eventStr = "E" + (event.event & 15) + "~" + (location);
+            if (monitorManager.locationsInChangedClasses[location]) {
+                changedEventsLocation.add(location);
+            }
+
+            if (event.frequency > 1) {
+                builder.append(eventStr).append("x").append(event.frequency);
+            } else {
+                builder.append(eventStr);
+            }
         }
 
         builder.append("]");

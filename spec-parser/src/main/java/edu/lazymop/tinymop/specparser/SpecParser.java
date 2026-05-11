@@ -113,7 +113,12 @@ public class SpecParser {
             StandaloneRVMProcessor processor = RVMParser.processor;
 
             // Generate monitors
-            MonitorGenerationUtil monGenUtil = new MonitorGenerationUtil(processor.getName(), processor.getMonitorData());
+            MonitorGenerationUtil monGenUtil;
+            if (processor.isRawSpec()) {
+                monGenUtil = new MonitorGenerationUtil(processor.getName(), processor.getRvmSpecFile());
+            } else {
+                monGenUtil = new MonitorGenerationUtil(processor.getName(), processor.getMonitorData());
+            }
             try (BufferedWriter writer = Writer.getWriter(
                     new File(getOutputDirectory(), monGenUtil.getFilename()).toString())) {
                 writer.write(new MonitorGenerator(monGenUtil,
@@ -123,9 +128,16 @@ public class SpecParser {
             }
 
             // Generate monitor managers
-            SlicerGenerationUtil slicerGenUtil = new SlicerGenerationUtil(processor.getName(),
-                    processor.getRvmSpecFile(), processor.getMonitorData(), 
-                    edu.lazymop.tinymop.specparser.Main.collectTestTraces);
+            SlicerGenerationUtil slicerGenUtil;
+            if (processor.isRawSpec()) {
+                slicerGenUtil = new SlicerGenerationUtil(processor.getName(),
+                        processor.getRvmSpecFile(),
+                        edu.lazymop.tinymop.specparser.Main.collectTestTraces);
+            } else {
+                slicerGenUtil = new SlicerGenerationUtil(processor.getName(),
+                        processor.getRvmSpecFile(), processor.getMonitorData(),
+                        edu.lazymop.tinymop.specparser.Main.collectTestTraces);
+            }
             try (BufferedWriter writer = Writer.getWriter(
                     new File(getOutputDirectory(), slicerGenUtil.getManagerFilename()).toString())) {
                 writer.write(new MonitorManagerGenerator(slicerGenUtil, processor.getMonitorData()).generateManagerCode());
