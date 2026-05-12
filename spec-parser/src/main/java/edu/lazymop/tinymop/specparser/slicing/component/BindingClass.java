@@ -228,6 +228,11 @@ public class BindingClass extends Component {
         BlockStmt body = StaticJavaParser.parseBlock("{" + event.getAction().replace("System.out.println(\"VIOLATION\");", "node.seeingViolatingEvent(event);") + "}");
 
         body.accept(new SlicerGenerationUtil.RecursiveBlockFlattener(), null);
+        body.addStatement(0, new AssignExpr(
+                new NameExpr("storeEvent"),
+                new NameExpr("event"),
+                AssignExpr.Operator.ASSIGN
+        ));
         body.addStatement(new MethodCallExpr("see", new NameExpr("event")));
 
         // return true;
@@ -356,6 +361,8 @@ public class BindingClass extends Component {
         if (slicerGenUtil.isRawSpec()) {
             // LinearTrie.LinearNode node;
             bindingClass.addField("LinearTrie.LinearNode", "node");
+
+            bindingClass.addField(PrimitiveType.intType(), "storeEvent");
         } else {
             // Trie.Node node;
             bindingClass.addField("Trie.Node", "node");
@@ -379,7 +386,7 @@ public class BindingClass extends Component {
             }
         } else {
             // Add user defined member (fields or methods
-            String decl = slicerGenUtil.getRvmSpecFile().getSpecs().iterator().next().getDeclarationsStr().replace("System.out.println(\"VIOLATION\");", "node.seeingViolatingEvent(event);");
+            String decl = slicerGenUtil.getRvmSpecFile().getSpecs().iterator().next().getDeclarationsStr().replace("System.out.println(\"VIOLATION\");", "node.seeingViolatingEvent(storeEvent);");
             String wrapped = "class TMP {" + decl + "}";
             CompilationUnit cu = StaticJavaParser.parse(wrapped);
             ClassOrInterfaceDeclaration dummy = cu.getClassByName("TMP").get();
