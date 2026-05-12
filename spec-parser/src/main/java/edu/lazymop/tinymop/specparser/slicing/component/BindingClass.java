@@ -228,11 +228,13 @@ public class BindingClass extends Component {
         BlockStmt body = StaticJavaParser.parseBlock("{" + event.getAction().replace("System.out.println(\"VIOLATION\");", "node.seeingViolatingEvent(event);") + "}");
 
         body.accept(new SlicerGenerationUtil.RecursiveBlockFlattener(), null);
-        body.addStatement(0, new AssignExpr(
-                new NameExpr("storeEvent"),
-                new NameExpr("event"),
-                AssignExpr.Operator.ASSIGN
-        ));
+        if (slicerGenUtil.isRawSpec()) {
+            body.addStatement(0, new AssignExpr(
+                    new NameExpr("storeEvent"),
+                    new NameExpr("event"),
+                    AssignExpr.Operator.ASSIGN
+            ));
+        }
         body.addStatement(new MethodCallExpr("see", new NameExpr("event")));
 
         // return true;
