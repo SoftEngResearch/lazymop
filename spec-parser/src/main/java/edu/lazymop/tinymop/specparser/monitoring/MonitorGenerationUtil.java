@@ -128,7 +128,15 @@ public class MonitorGenerationUtil {
     private List<String> obtainEventNames(RVMSpecFile rvmSpecFile) {
         List<String> events = new ArrayList<>();
         for (EventDefinition eventDef : rvmSpecFile.getSpecs().get(0).getEvents()) {
-            events.add(eventDef.getId());
+            if (events.contains(eventDef.getId())) {
+                int i = 1;
+                while (events.contains(eventDef.getId() + "_" + i)) {
+                    i++;
+                }
+                events.add(eventDef.getId() + "_" + i);
+            } else {
+                events.add(eventDef.getId());
+            }
         }
         return events;
     }

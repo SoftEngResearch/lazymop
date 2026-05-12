@@ -70,6 +70,7 @@ public class MonitorManagerGenerator {
             code.addImport(imp.getName().toString(), imp.isStatic(), imp.isAsterisk());
         }
 
+        code.addImport("java.util", false, true);
         code.addImport(monitoring + ".GlobalMonitorManager");
         code.addImport(monitoring + ".MonitorManager");
         code.addImport(monitoring + ".monitors." + specName + "Monitor");
@@ -208,12 +209,19 @@ public class MonitorManagerGenerator {
         int eventID = 0;
         Set<String> processedEvents = new HashSet<>();
 
-        for (EventDefinition event : slicerGenUtil.getEvents()) {
-            if (!processedEvents.contains(event.getId())) {
+        if (slicerGenUtil.isRawSpec()) {
+            for (EventDefinition event : slicerGenUtil.getEvents()) {
                 eventID += 1;
-                processedEvents.add(event.getId());
+                generateEventMethod(klass, event, eventID);
             }
-            generateEventMethod(klass, event, eventID);
+        } else {
+            for (EventDefinition event : slicerGenUtil.getEvents()) {
+                if (!processedEvents.contains(event.getId())) {
+                    eventID += 1;
+                    processedEvents.add(event.getId());
+                }
+                generateEventMethod(klass, event, eventID);
+            }
         }
     }
 

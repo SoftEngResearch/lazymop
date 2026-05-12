@@ -4,11 +4,7 @@ import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.NodeList;
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.javaparser.ast.body.ConstructorDeclaration;
-import com.github.javaparser.ast.body.FieldDeclaration;
-import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.ast.body.Parameter;
+import com.github.javaparser.ast.body.*;
 import com.github.javaparser.ast.expr.AssignExpr;
 import com.github.javaparser.ast.expr.BooleanLiteralExpr;
 import com.github.javaparser.ast.expr.CastExpr;
@@ -375,10 +371,22 @@ public class BindingClass extends Component {
                     new IntegerLiteralExpr("-1")).addModifier(Modifier.Keyword.PRIVATE);
         }
 
-        // Add user defined fields to class (CSC)
-        for (FieldDeclaration field : slicerGenUtil.getFieldsFromString(slicerGenUtil.eventHandlerUtil.getRVMonitorSpec()
-                .getDeclarationsStr())) {
-            bindingClass.addMember(field);
+        if (!slicerGenUtil.isRawSpec()) {
+            // Add user defined fields to class (CSC)
+            for (FieldDeclaration field : slicerGenUtil.getFieldsFromString(slicerGenUtil.eventHandlerUtil.getRVMonitorSpec()
+                    .getDeclarationsStr())) {
+                bindingClass.addMember(field);
+            }
+        } else {
+            // Add user defined member (fields or methods
+            String decl = slicerGenUtil.getRvmSpecFile().getSpecs().iterator().next().getDeclarationsStr().replace("System.out.println(\"VIOLATION\");", "node.seeingViolatingEvent(event);");
+            String wrapped = "class TMP {" + decl + "}";
+            CompilationUnit cu = StaticJavaParser.parse(wrapped);
+            ClassOrInterfaceDeclaration dummy = cu.getClassByName("TMP").get();
+            for (BodyDeclaration<?> member : dummy.getMembers()) {
+//                System.out.println("Adding member: " + member);
+                bindingClass.addMember(member);
+            }
         }
 
         // e.g., WeakReference Ref_t = null;
