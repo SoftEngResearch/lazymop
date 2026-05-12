@@ -44,8 +44,7 @@ Arrays_DeepHashCode() {
 		call(int Arrays.deepHashCode(Object[])) && args(arr) {
 		ArrayList<Object[]> enclosing = new ArrayList<Object[]>();
 		if (cycle(enclosing, arr)){
-			RVMLogging.out.println(Level.CRITICAL, __DEFAULT_MESSAGE);
-			RVMLogging.out.println(Level.CRITICAL, "The specified array contains itself as an element.");
+			System.out.println("VIOLATION");
 		}
 	}
 }

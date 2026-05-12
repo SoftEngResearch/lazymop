@@ -31,8 +31,7 @@ Collections_ImplementComparable() {
 			// Each element must implement the Comparable interface.
 			Object o1 = arr[i];
 			if (!(o1 instanceof Comparable)) {
-				RVMLogging.out.println(Level.CRITICAL, msg);
-				RVMLogging.out.println(Level.CRITICAL, i + "-th element does not implement the Comparable interface.");
+				System.out.println("VIOLATION");
 			}
 			Comparable c1 = (Comparable)o1;
 
@@ -44,8 +43,7 @@ Collections_ImplementComparable() {
 					c2.compareTo(c1);
 				}
 				catch (ClassCastException e) {
-					RVMLogging.out.println(Level.CRITICAL, msg);
-					RVMLogging.out.println(Level.CRITICAL, i + "-th element and " + j + "-th element are not comparable.");
+					System.out.println("VIOLATION");
 				}
 			}
 		}
@@ -53,7 +51,7 @@ Collections_ImplementComparable() {
 
 	event invalid_sort before(List list) :
 		call(void Collections.sort(List)) && args(list) {
-		this.validate(list.toArray(), __DEFAULT_MESSAGE);
+		this.validate(list.toArray(), "");
 	}
 
 	event invalid_minmax before(Collection col) :
@@ -61,7 +59,7 @@ Collections_ImplementComparable() {
 			call(* Collections.min(Collection)) ||
 			call(* Collections.max(Collection))
 		) && args(col) {
-		this.validate(col.toArray(), __DEFAULT_MESSAGE);
+		this.validate(col.toArray(), "");
 	}
 }
 

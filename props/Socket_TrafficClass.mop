@@ -36,18 +36,7 @@ Socket_TrafficClass() {
 		}
 
 		if (outofrange || mbz || precedence) {
-			RVMLogging.out.println(Level.CRITICAL, __DEFAULT_MESSAGE);
-			if (outofrange) {
-				RVMLogging.out.println(Level.CRITICAL, "The traffic class value " + tc + " is out of range; [0 ~ 255].");
-			}
-			else {
-				if (mbz) {
-					RVMLogging.out.println(Level.CRITICAL, "The traffic class value sets 1 to MBZ.");
-				}
-				if (precedence) {
-					RVMLogging.out.println(Level.CRITICAL, "The traffic class value sets non-zero precedence.");
-				}
-			}
+			System.out.println("VIOLATION");
 		}
 	}
 }

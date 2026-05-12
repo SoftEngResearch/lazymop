@@ -18,7 +18,6 @@ import com.runtimeverification.rvmonitor.java.rt.RVMLogging.Level;
 Enum_NoExtraWhiteSpace() {
 	event valueOf before(Class c, String name) : call(* Enum+.valueOf(Class, String)) && args(c, name) 
 		&& condition(name.length() != name.trim().length()) {
-		RVMLogging.out.println(Level.CRITICAL, __DEFAULT_MESSAGE);
-		RVMLogging.out.println(Level.CRITICAL, "Please use the exact name. No extraneous whitespace characters are permitted");
+		System.out.println("VIOLATION");
 	}
 }

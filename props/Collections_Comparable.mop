@@ -36,8 +36,7 @@ Collections_Comparable() {
 					comp.compare(o2, o1);
 				}
 				catch (ClassCastException e) {
-					RVMLogging.out.println(Level.CRITICAL, msg);
-					RVMLogging.out.println(Level.CRITICAL, i + "-th element and " + j + "-th element are not comparable.");
+					System.out.println("VIOLATION");
 				}
 			}
 		}
@@ -45,7 +44,7 @@ Collections_Comparable() {
 
 	event invalid_sort before(List list, Comparator comp) :
 		call(void Collections.sort(List, Comparator)) && args(list, comp) {
-		this.validate(list.toArray(), comp, __DEFAULT_MESSAGE);
+		this.validate(list.toArray(), comp, "");
 	}
 
 	event invalid_minmax before(Collection col, Comparator comp) :
@@ -53,7 +52,7 @@ Collections_Comparable() {
 			call(* Collections.min(Collection, Comparator)) ||
 			call(* Collections.max(Collection, Comparator))
 		) && args(col, comp) {
-		this.validate(col.toArray(), comp, __DEFAULT_MESSAGE);
+		this.validate(col.toArray(), comp, "");
 	}
 }
 

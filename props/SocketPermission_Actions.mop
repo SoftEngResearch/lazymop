@@ -39,8 +39,7 @@ SocketPermission_Actions() {
 		}
 
 		if (!valid) {
-			RVMLogging.out.println(Level.CRITICAL, __DEFAULT_MESSAGE);
-			RVMLogging.out.println(Level.CRITICAL, "The 'actions' parameter '" + actions + "' is invalid.");
+			System.out.println("VIOLATION");
 		}
 	}
 }

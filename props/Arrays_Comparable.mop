@@ -31,8 +31,7 @@ Arrays_Comparable() {
 			// Each element must implement the Comparable interface.
 			Object o1 = arr[i];
 			if (!(o1 instanceof Comparable)) {
-				RVMLogging.out.println(Level.CRITICAL, __DEFAULT_MESSAGE);
-				RVMLogging.out.println(Level.CRITICAL, i + "-th element does not implement the Comparable interface.");
+				System.out.println("VIOLATION");
 			}
 			Comparable c1 = (Comparable)o1;
 
@@ -44,8 +43,7 @@ Arrays_Comparable() {
 					c2.compareTo(c1);
 				}
 				catch (ClassCastException e) {
-					RVMLogging.out.println(Level.CRITICAL, __DEFAULT_MESSAGE);
-					RVMLogging.out.println(Level.CRITICAL, i + "-th element and " + j + "-th element are not comparable.");
+					System.out.println("VIOLATION");
 				}
 			}
 		}

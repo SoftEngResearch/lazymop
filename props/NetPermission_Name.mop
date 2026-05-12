@@ -32,8 +32,7 @@ NetPermission_Name() {
 		}
 
 		if (!valid) {
-			RVMLogging.out.println(Level.CRITICAL, __DEFAULT_MESSAGE);
-			RVMLogging.out.println(Level.CRITICAL, "The target name " + name + " does not conform to the naming convention.");
+			System.out.println("VIOLATION");
 		}
 	}
 }

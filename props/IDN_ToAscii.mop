@@ -33,8 +33,7 @@ IDN_ToAscii() {
 		boolean safe = this.isAsciiSafe(input);
 
 		if (!safe) {
-			RVMLogging.out.println(Level.CRITICAL, __DEFAULT_MESSAGE);
-			RVMLogging.out.println(Level.CRITICAL, "The input to IDN.toASCII() should not be used in an internationalized domain name.");
+			System.out.println("VIOLATION");
 		}
 	}
 }

@@ -28,8 +28,7 @@ DatagramPacket_SetLength() {
 		if (length + offset <= buffer.length)
 			return;
 
-		RVMLogging.out.println(Level.CRITICAL, __DEFAULT_MESSAGE);
-		RVMLogging.out.println(Level.CRITICAL, "The length argument is out of range; " + offset + " + " + length + " > " + buffer.length);
+		System.out.println("VIOLATION");
 	}
 }
 

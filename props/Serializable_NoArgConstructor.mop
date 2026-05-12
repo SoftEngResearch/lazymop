@@ -57,8 +57,7 @@ Serializable_NoArgConstructor() {
 				catch (NoSuchMethodException e) {
 				}
 				if (inaccessible) {
-					RVMLogging.out.println(Level.CRITICAL, __DEFAULT_MESSAGE);
-					RVMLogging.out.println(Level.CRITICAL, "The superclass of " + klass.getName() + " does not have an accessible no-arg constructor.");
+					System.out.println("VIOLATION");
 				}
 			}
 		}

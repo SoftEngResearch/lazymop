@@ -20,8 +20,7 @@ URLEncoder_EncodeUTF8() {
 		if (enc.equalsIgnoreCase("utf-8") || enc.equalsIgnoreCase("utf8"))
 			return;
 
-		RVMLogging.out.println(Level.CRITICAL, __DEFAULT_MESSAGE);
-		RVMLogging.out.println(Level.CRITICAL, "The used encoding '" + enc + "' may introduce incompatibilites.");
+		System.out.println("VIOLATION");
 	}
 }
 

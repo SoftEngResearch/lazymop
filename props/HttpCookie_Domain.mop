@@ -66,8 +66,7 @@ HttpCookie_Domain() {
 		}
 
 		if (outofrange || hasctrl || hassep) {
-			RVMLogging.out.println(Level.CRITICAL, __DEFAULT_MESSAGE);
-			RVMLogging.out.println(Level.CRITICAL, "The specified domain '" + domain + "' is invalid; it cannot contain '" + ch + "'.");
+			System.out.println("VIOLATION");
 		}
 	}
 }

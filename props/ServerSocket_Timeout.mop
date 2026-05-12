@@ -19,8 +19,7 @@ ServerSocket_Timeout() {
 		if (timeout > 0)
 			return;
 
-		RVMLogging.out.println(Level.CRITICAL, __DEFAULT_MESSAGE);
-		RVMLogging.out.println(Level.CRITICAL, "An invalid timeout value " + timeout + " was set to a ServerSocket object.");
+		System.out.println("VIOLATION");
 	}
 }
 

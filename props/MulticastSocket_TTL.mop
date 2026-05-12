@@ -17,20 +17,19 @@ MulticastSocket_TTL() {
 		if (0 <= ttl && ttl <= 255)
 			return;
 
-		RVMLogging.out.println(Level.CRITICAL, msg);
-		RVMLogging.out.println(Level.CRITICAL, "The specified TTL " + ttl + " is out of range; [0 ~ 255]");
+		System.out.println("VIOLATION");
 	}
 
 	event set1 before(byte ttl) :
 		call(* MulticastSocket+.setTTL(byte)) && args(ttl)
 	{
-		this.check(__DEFAULT_MESSAGE, ttl & 0xff);
+		this.check("", ttl & 0xff);
 	}
 
 	event set2 before(int ttl) :
 		call(* MulticastSocket+.setTimeToLive(int)) && args(ttl)
 	{
-		this.check(__DEFAULT_MESSAGE, ttl);
+		this.check("", ttl);
 	}
 }
 

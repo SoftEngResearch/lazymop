@@ -37,8 +37,7 @@ Collection_HashCode() {
 			}
 
 			if (equalsmethod != null && hashcodemethod == null) {
-				RVMLogging.out.println(Level.CRITICAL, __DEFAULT_MESSAGE);
-				RVMLogging.out.println(Level.CRITICAL, klass.getName() + " overrides equals() but does not override hashCode().");
+				System.out.println("VIOLATION");
 			}
 		}
 	}

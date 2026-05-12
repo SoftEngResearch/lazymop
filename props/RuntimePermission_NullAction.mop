@@ -17,8 +17,7 @@ import com.runtimeverification.rvmonitor.java.rt.RVMLogging.Level;
 RuntimePermission_NullAction() {
 	event constructor_runtimeperm after(String name, String actions) returning(RuntimePermission r): 
 		call(RuntimePermission.new(String, String)) && args(name, actions) && condition(actions != null) {
-			RVMLogging.out.println(Level.CRITICAL, __DEFAULT_MESSAGE);
-			RVMLogging.out.println(Level.CRITICAL, "The actions string should be null.");
+			System.out.println("VIOLATION");
 		}
 }
 
