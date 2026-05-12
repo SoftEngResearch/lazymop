@@ -225,7 +225,7 @@ public class BindingClass extends Component {
         method.addParameter(new Parameter(new PrimitiveType(PrimitiveType.Primitive.INT), "event"));
 
         // this adds condition or code defined in the spec file
-        BlockStmt body = StaticJavaParser.parseBlock("{" + event.getAction().replace("System.out.println(\"VIOLATION\");", "node.seeingViolatingEvent(event);") + "}");
+        BlockStmt body = StaticJavaParser.parseBlock("{" + event.getAction().replace("System.out.println(\"VIOLATION\");", "node.seeingViolatingEvent(event);").replace("return;", "return false;") + "}");
 
         body.accept(new SlicerGenerationUtil.RecursiveBlockFlattener(), null);
         if (slicerGenUtil.isRawSpec()) {
