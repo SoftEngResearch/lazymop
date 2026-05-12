@@ -33,8 +33,7 @@ Arrays_MutuallyComparable() {
 					comp.compare(o2, o1);
 				}
 				catch (ClassCastException e) {
-					RVMLogging.out.println(Level.CRITICAL, __DEFAULT_MESSAGE);
-					RVMLogging.out.println(Level.CRITICAL, i + "-th element and " + j + "-th element are not comparable.");
+					node.seeingViolatingEvent(eID);
 				}
 			}
 		}
@@ -54,8 +53,7 @@ Arrays_MutuallyComparable() {
 					comp.compare(o2, o1);
 				}
 				catch (ClassCastException e) {
-					RVMLogging.out.println(Level.CRITICAL, __DEFAULT_MESSAGE);
-					RVMLogging.out.println(Level.CRITICAL, i + "-th element and " + j + "-th element are not comparable.");
+					node.seeingViolatingEvent(eID);
 				}
 			}
 		}

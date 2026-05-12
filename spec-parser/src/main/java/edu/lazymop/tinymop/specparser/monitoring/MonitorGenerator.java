@@ -17,17 +17,7 @@ import com.github.javaparser.ast.body.EnumConstantDeclaration;
 import com.github.javaparser.ast.body.EnumDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.Parameter;
-import com.github.javaparser.ast.expr.AssignExpr;
-import com.github.javaparser.ast.expr.BinaryExpr;
-import com.github.javaparser.ast.expr.BooleanLiteralExpr;
-import com.github.javaparser.ast.expr.Expression;
-import com.github.javaparser.ast.expr.FieldAccessExpr;
-import com.github.javaparser.ast.expr.MethodCallExpr;
-import com.github.javaparser.ast.expr.NameExpr;
-import com.github.javaparser.ast.expr.ObjectCreationExpr;
-import com.github.javaparser.ast.expr.StringLiteralExpr;
-import com.github.javaparser.ast.expr.ThisExpr;
-import com.github.javaparser.ast.expr.VariableDeclarationExpr;
+import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.ForEachStmt;
@@ -192,6 +182,18 @@ public class MonitorGenerator {
 
     private void addStringRunner(ClassOrInterfaceDeclaration klass) {
         if (monGenUtil.isRawSpec()) {
+            ClassOrInterfaceType returnType = new ClassOrInterfaceType("VerdictCategory");
+            MethodDeclaration method = new MethodDeclaration(Modifier.createModifierList(Modifier.Keyword.PUBLIC),
+                    returnType, "runAutomatonOnStrings");
+            String trace = "trace";
+            method.addParameter("List<String>", trace);
+            BlockStmt block = new BlockStmt();
+            FieldAccessExpr verdictField = new FieldAccessExpr(new ThisExpr(), "verdict");
+            ReturnStmt returnStmt = new ReturnStmt(verdictField);
+
+            block.addStatement(returnStmt);
+            method.setBody(block);
+            klass.addMember(method);
             return;
         }
         ClassOrInterfaceType returnType = new ClassOrInterfaceType("VerdictCategory");
@@ -452,7 +454,7 @@ public class MonitorGenerator {
                                 AssignExpr.Operator.ASSIGN)))
                         .addStatement(new ExpressionStmt(new AssignExpr(
                                 new FieldAccessExpr(new ThisExpr(), automaton),
-                                new MethodCallExpr("buildAutomaton"),
+                                monGenUtil.isRawSpec() ? new NullLiteralExpr() : new MethodCallExpr("buildAutomaton"),
                                 AssignExpr.Operator.ASSIGN)))
                         .addStatement(new ExpressionStmt(new AssignExpr(
                                 new FieldAccessExpr(new ThisExpr(), verdict),

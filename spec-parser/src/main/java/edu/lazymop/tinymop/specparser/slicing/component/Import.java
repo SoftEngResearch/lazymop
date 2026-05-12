@@ -34,6 +34,7 @@ public class Import extends Component {
         String monitoring = "edu.lazymop.tinymop.monitoring";
         code.addImport(monitoring + ".MonitorManager");
         code.addImport(monitoring + ".datastructure.Trie");
+        code.addImport(monitoring + ".datastructure.LinearTrie");
         code.addImport(monitoring + ".util.SpecializedSlicingAlgorithmUtil");
         code.addImport(monitoring + ".GlobalMonitorManager");
 
