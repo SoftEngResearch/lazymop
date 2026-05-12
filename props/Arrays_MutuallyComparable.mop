@@ -33,7 +33,7 @@ Arrays_MutuallyComparable() {
 					comp.compare(o2, o1);
 				}
 				catch (ClassCastException e) {
-					node.seeingViolatingEvent(eID);
+					node.seeingViolatingEvent(event);
 				}
 			}
 		}
@@ -53,7 +53,7 @@ Arrays_MutuallyComparable() {
 					comp.compare(o2, o1);
 				}
 				catch (ClassCastException e) {
-					node.seeingViolatingEvent(eID);
+					node.seeingViolatingEvent(event);
 				}
 			}
 		}
