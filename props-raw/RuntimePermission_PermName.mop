@@ -2,6 +2,7 @@ package mop;
 
 import java.io.*;
 import java.lang.*;
+import java.util.*;
 import com.runtimeverification.rvmonitor.java.rt.RVMLogging;
 import com.runtimeverification.rvmonitor.java.rt.RVMLogging.Level;
 
@@ -16,8 +17,13 @@ import com.runtimeverification.rvmonitor.java.rt.RVMLogging.Level;
  */
  
 RuntimePermission_PermName() {
+	private Set<Integer> checked = new HashSet<>();
 	event constructor_runtimeperm after(String name) returning(RuntimePermission r): 
 		call(RuntimePermission.new(String)) && args(name) {
+			int hash = 31 * name.hashCode();
+			if (checked.contains(hash)) return;
+			checked.add(hash);
+
 			int index = name.indexOf("*");
 			if(index != -1 && name.length() > 1){
 				if(index != name.length() - 1){

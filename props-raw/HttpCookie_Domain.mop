@@ -1,6 +1,7 @@
 package mop;
 
 import java.net.*;
+import java.util.*;
 import com.runtimeverification.rvmonitor.java.rt.RVMLogging;
 import com.runtimeverification.rvmonitor.java.rt.RVMLogging.Level;
 
@@ -30,9 +31,14 @@ import com.runtimeverification.rvmonitor.java.rt.RVMLogging.Level;
  */
 
 HttpCookie_Domain() {
+	private Set<Integer> checked = new HashSet<>();
 	event setdomain before(String domain) :
 		call(void HttpCookie.setDomain(String)) && args(domain)
 	{
+		int hash = 31 * domain.hashCode();
+		if (checked.contains(hash)) return;
+		checked.add(hash);
+
 		String separators = "()<>@,;:\\\"/[]?={} \t";
 
 		char ch = '0';

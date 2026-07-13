@@ -20,6 +20,7 @@ import com.runtimeverification.rvmonitor.java.rt.RVMLogging.Level;
  */
 
 TreeMap_Comparable() {
+	private Set<Integer> checked = new HashSet<>();
 	private void validate(Object elem, String msg) {
 		if (!(elem instanceof Comparable)) {
 			System.out.println("VIOLATION");
@@ -27,6 +28,10 @@ TreeMap_Comparable() {
 	}
 
 	private void validateAll(Map src, String msg) {
+		int hash = 31 * src.hashCode();
+		if (checked.contains(hash)) return;
+		checked.add(hash);
+
 		for (Map.Entry entry : (Collection<Map.Entry>)src.entrySet()) {
 			validate(entry.getKey(), msg);
 		}

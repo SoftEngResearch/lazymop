@@ -16,12 +16,17 @@ import com.runtimeverification.rvmonitor.java.rt.RVMLogging.Level;
  */
 
 EnumSet_NonNull() {
+	private Set<Integer> checked = new HashSet<>();
 	event insertnull before(Object e) :
 		call(* EnumSet+.add(Object)) && args(e) && condition(e == null) {
 		System.out.println("VIOLATION");
 	}
 	event insertnull before(Collection c) :
 		call(* EnumSet+.addAll(Collection)) && args(c) {
+		int hash = 31 * c.hashCode();
+		if (checked.contains(hash)) return;
+		checked.add(hash);
+
 		for (Object elem : c) {
 			if (elem == null){
 				System.out.println("VIOLATION");

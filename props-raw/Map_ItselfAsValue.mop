@@ -17,6 +17,7 @@ import com.runtimeverification.rvmonitor.java.rt.RVMLogging.Level;
  */
 
 Map_ItselfAsValue() {
+	private Set<Integer> checked = new HashSet<>();
 	event put before(Map map, Object key, Object value) :
 		call(* Map+.put(Object, Object)) && target(map) && args(key, value) {
 		if (value == map) {
@@ -26,6 +27,10 @@ Map_ItselfAsValue() {
 
 	event putall before(Map map, Map src) :
 		call(* Map+.putAll(Map)) && target(map) && args(src) {
+		int hash = 31 * map.hashCode() + src.hashCode();
+		if (checked.contains(hash)) return;
+		checked.add(hash);
+
 		for (Map.Entry entry : (Set<Map.Entry>)src.entrySet()) {
 			if (entry.getValue() == map) {
 				System.out.println("VIOLATION");

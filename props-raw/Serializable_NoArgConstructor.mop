@@ -2,6 +2,7 @@ package mop;
 
 import java.io.*;
 import java.lang.reflect.*;
+import java.util.*;
 import com.runtimeverification.rvmonitor.java.rt.RVMLogging;
 import com.runtimeverification.rvmonitor.java.rt.RVMLogging.Level;
 
@@ -22,6 +23,7 @@ import com.runtimeverification.rvmonitor.java.rt.RVMLogging.Level;
  * @severity error
  */
 Serializable_NoArgConstructor() {
+	private Set<Integer> checked = new HashSet<>();
 	private String getPackageName(Class cl) {
 		String s = cl.getName();
 		int i = s.lastIndexOf('[');
@@ -33,7 +35,11 @@ Serializable_NoArgConstructor() {
 
 	event staticinit after() : staticinitialization(Serializable+) {
 		org.aspectj.lang.Signature initsig = __STATICSIG;
-		Class klass = initsig.getDeclaringType();		
+		Class klass = initsig.getDeclaringType();	
+		
+		int hash = 31 * klass.hashCode();
+		if (checked.contains(hash)) return;
+		checked.add(hash);
 
 		if (klass != null) {
 			Class nonserialzable = klass;

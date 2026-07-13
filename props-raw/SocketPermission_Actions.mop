@@ -1,6 +1,7 @@
 package mop;
 
 import java.net.*;
+import java.util.*;
 import com.runtimeverification.rvmonitor.java.rt.RVMLogging;
 import com.runtimeverification.rvmonitor.java.rt.RVMLogging.Level;
 
@@ -16,9 +17,14 @@ import com.runtimeverification.rvmonitor.java.rt.RVMLogging.Level;
  * @severity error
  */
 SocketPermission_Actions() {
+	private Set<Integer> checked = new HashSet<>();
 	event construct before(String actions) :
 		call(SocketPermission.new(String, String)) && args(*, actions)
 	{
+		int hash = 31 * actions.hashCode();
+		if (checked.contains(hash)) return;
+		checked.add(hash);
+
 		HashSet<String> possible = new HashSet<String>();
 		possible.add("connect");
 		possible.add("listen");

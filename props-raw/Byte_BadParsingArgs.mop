@@ -2,6 +2,7 @@ package mop;
 
 import java.io.*;
 import java.lang.*;
+import java.util.*;
 import com.runtimeverification.rvmonitor.java.rt.RVMLogging;
 import com.runtimeverification.rvmonitor.java.rt.RVMLogging.Level;
 
@@ -15,6 +16,7 @@ import com.runtimeverification.rvmonitor.java.rt.RVMLogging.Level;
  * @severity warning
  */
 Byte_BadParsingArgs() {
+    private Set<Integer> checked = new HashSet<>();
     event bad_arg before(String s, int radix) : 
         call(* Byte.parseByte(String, int)) && args(s, radix) {
         if(s == null || s.length() == 0){
@@ -22,6 +24,10 @@ Byte_BadParsingArgs() {
         } else if(radix < java.lang.Character.MIN_RADIX || radix > java.lang.Character.MAX_RADIX){
          System.out.println("VIOLATION");
         } else {
+            int hash = 31 * s.hashCode() + radix;
+            if (checked.contains(hash)) return;
+            checked.add(hash);
+
             for(int j = 0; j < s.length(); j++){
                 if(Character.digit(s.charAt(j), radix) == -1){
                     if(!(j == 0 && s.length() > 1 && s.charAt(0) == '-')){

@@ -3,6 +3,7 @@ package mop;
 import java.io.*;
 import java.lang.*;
 import java.nio.*;
+import java.util.*;
 import com.runtimeverification.rvmonitor.java.rt.RVMLogging;
 import com.runtimeverification.rvmonitor.java.rt.RVMLogging.Level;
 
@@ -20,6 +21,7 @@ import com.runtimeverification.rvmonitor.java.rt.RVMLogging.Level;
  */
 
 CharSequence_NotInSet() {
+	private Set<Integer> checked = new HashSet<>();
 	boolean flag = false;
 	
 	event set_add before() : call(* Set+.add(..)) && args(CharSequence) && !args(String) && !args(CharBuffer) && condition(!flag){
@@ -28,6 +30,10 @@ CharSequence_NotInSet() {
 	}
 
 	event set_addall before(Collection c) : call(* Set+.addAll(Collection)) && args(c) && condition(!flag){
+		int hash = 31 * c.hashCode();
+		if (checked.contains(hash)) return;
+		checked.add(hash);
+
 		for(Object o : c){
 			if(o instanceof CharSequence && !(o instanceof String) && !(o instanceof CharBuffer)){
 				flag = true;

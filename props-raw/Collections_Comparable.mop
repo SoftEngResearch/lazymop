@@ -49,6 +49,7 @@ Collections_Comparable() {
 		int hash = 31 * list.hashCode();
 		if (checked.contains(hash)) return;
 		checked.add(hash);
+
 		this.validate(list.toArray(), comp, "");
 	}
 
@@ -61,6 +62,7 @@ Collections_Comparable() {
 		int hash = 31 * list.hashCode();
 		if (checked.contains(hash)) return;
 		checked.add(hash);
+
 		this.validate(col.toArray(), comp, "");
 	}
 }

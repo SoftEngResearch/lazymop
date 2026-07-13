@@ -28,6 +28,7 @@ import com.runtimeverification.rvmonitor.java.rt.RVMLogging.Level;
  */
 
 SortedSet_Comparable() {
+	private Set<Integer> checked = new HashSet<>();
 	event add before(Object e) :
 		(
 			call(* Collection+.add*(..)) ||
@@ -41,6 +42,10 @@ SortedSet_Comparable() {
 	event addall before(Collection c) :
 		call(* Collection+.addAll(Collection)) &&
 		target(SortedSet) && args(c) {
+		int hash = 31 * c.hashCode();
+		if (checked.contains(hash)) return;
+		checked.add(hash);
+
 		for (Object elem : c) {
 			if (!(elem instanceof Comparable)) {
 				System.out.println("VIOLATION");

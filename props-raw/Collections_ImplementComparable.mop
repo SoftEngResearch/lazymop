@@ -25,6 +25,7 @@ import com.runtimeverification.rvmonitor.java.rt.RVMLogging.Level;
  */
 
 Collections_ImplementComparable() {
+	private Set<Integer> checked = new HashSet<>();
 	private void validate(Object[] arr, String msg)
 	{
 		for (int i = 0; i < arr.length; ++i) {
@@ -51,6 +52,9 @@ Collections_ImplementComparable() {
 
 	event invalid_sort before(List list) :
 		call(void Collections.sort(List)) && args(list) {
+		int hash = 31 * list.hashCode();
+		if (checked.contains(hash)) return;
+		checked.add(hash);
 		this.validate(list.toArray(), "");
 	}
 
@@ -59,6 +63,9 @@ Collections_ImplementComparable() {
 			call(* Collections.min(Collection)) ||
 			call(* Collections.max(Collection))
 		) && args(col) {
+		int hash = 31 * col.hashCode();
+		if (checked.contains(hash)) return;
+		checked.add(hash);
 		this.validate(col.toArray(), "");
 	}
 }

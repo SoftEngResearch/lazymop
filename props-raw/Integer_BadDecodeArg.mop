@@ -2,6 +2,7 @@ package mop;
 
 import java.io.*;
 import java.lang.*;
+import java.util.*;
 import com.runtimeverification.rvmonitor.java.rt.RVMLogging;
 import com.runtimeverification.rvmonitor.java.rt.RVMLogging.Level;
 
@@ -15,12 +16,16 @@ import com.runtimeverification.rvmonitor.java.rt.RVMLogging.Level;
  * @severity error
  */
 Integer_BadDecodeArg() {
-
+    private Set<Integer> checked = new HashSet<>();
     event decode before(Integer i, String nm) : 
         call(* Integer.decode(String)) && args(nm) && target(i) {
         if(nm == null || nm.length() == 0){
             System.out.println("VIOLATION");
         } else {
+            int hash = 31 * nm.hashCode() + i;
+            if (checked.contains(hash)) return;
+            checked.add(hash);
+
             //whitespace check
             for(int j = 0; j < nm.length(); j++){
                 if(Character.isWhitespace(nm.charAt(j))){

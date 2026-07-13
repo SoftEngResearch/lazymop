@@ -1,6 +1,7 @@
 package mop;
 
 import java.net.*;
+import java.util.*;
 import com.runtimeverification.rvmonitor.java.rt.RVMLogging;
 import com.runtimeverification.rvmonitor.java.rt.RVMLogging.Level;
 
@@ -16,12 +17,17 @@ import com.runtimeverification.rvmonitor.java.rt.RVMLogging.Level;
  * @severity error
  */
 NetPermission_Name() {
+	private Set<Integer> checked = new HashSet<>();
 	event construct before(String name) :
 		(
 			call(NetPermission.new(String)) ||
 			call(NetPermission.new(String, String))
 		) && args(name, ..)
 	{
+		int hash = 31 * name.hashCode();
+		if (checked.contains(hash)) return;
+		checked.add(hash);
+				
 		boolean valid = true;
 		for (int i = 0; i < name.length() - 1; ++i) {
 			char c = name.charAt(i);
