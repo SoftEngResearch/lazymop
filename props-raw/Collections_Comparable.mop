@@ -59,7 +59,7 @@ Collections_Comparable() {
 			call(* Collections.max(Collection, Comparator))
 		) && args(col, comp) {
 //		int hash = 31 * col.hashCode() + comp.hashCode();
-		int hash = 31 * list.hashCode();
+		int hash = 31 * col.hashCode();
 		if (checked.contains(hash)) return;
 		checked.add(hash);
 
