@@ -28,5 +28,6 @@ public aspect BaseAspect {
   !within(org.apache.maven..*) &&
   !within(org.testng..*) &&
   !within(org.jmock..*) &&
+  !within(org.eclipse.collections.impl.map.mutable.primitive..*) &&
   !withincode(* *.IMM_*(..));
 }

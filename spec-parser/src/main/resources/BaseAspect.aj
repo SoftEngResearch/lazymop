@@ -27,5 +27,6 @@ public aspect BaseAspect {
   !within(com.github.oxo42.stateless4j..*) &&
   !within(org.apache.maven..*) &&
   !within(org.testng..*) &&
+  !within(org.eclipse.collections.impl.map.mutable.primitive..*) &&
   !within(org.jmock..*);
 }

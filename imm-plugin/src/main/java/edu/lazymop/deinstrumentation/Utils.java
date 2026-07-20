@@ -86,6 +86,7 @@ public class Utils {
                 + "  !within(org.apache.maven..*) &&\n"
                 + "  !within(org.testng..*) &&\n"
                 + "  !within(org.jmock..*) &&\n"
+                + "  !within(org.eclipse.collections.impl.map.mutable.primitive..*) &&\n"
                 + (supportDeLoop ? "  !withincode(@mop.NoMonitoringLoop * *(..)) &&\n" : "")
                 + (supportDeSpec ? "  !withincode(@mop.NoMonitoringSpec * *(..)) &&\n" : "")
 //                + (pointcuts.isEmpty() ? "!withincode(* *.IMM_*(..));" : "(!withincode(* *.IMM_*(..)) || "
