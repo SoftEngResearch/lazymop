@@ -41,8 +41,9 @@ public class SpecializedSlicingAlgorithmUtil {
 
             Map<String, Map<Integer, Integer>> traceTestFrequencies = 
                 (collect && collectTestTraces) ? new LinkedHashMap<>() : null;
-            List<String> traces = new ArrayList<>();
-            List<String> tracesFromChangedClasses = new ArrayList<>();
+            Map<String, int[]> traces = new HashMap<>();
+            Map<String, int[]> tracesFromChangedClasses = new HashMap<>();
+            int traceID = 1;
             int totalBindings = 0;
             int totalNewBindings = 0;
 
@@ -73,10 +74,10 @@ public class SpecializedSlicingAlgorithmUtil {
                     // Put trace into String
                     Set<Integer> changedEventsLocation = new HashSet<>();
                     String trace = compactRawTraceBody(linearRoot.events, monitorManager, changedEventsLocation);
-                    traces.add(trace);
+                    traces.put(trace, new int[]{traceID, 1});
                     totalBindings = 1;
                     if (!changedEventsLocation.isEmpty()) {
-                        tracesFromChangedClasses.add(trace);
+                        tracesFromChangedClasses.put(trace, new int[]{traceID, 1});
                         totalNewBindings = 1;
                     }
 
@@ -142,12 +143,13 @@ public class SpecializedSlicingAlgorithmUtil {
                                 mergeTestCounts(perTraceTests, obj.node.snapshotTestCounts());
                             }
                             if (obj.fromChangedClasses) {
-                                tracesFromChangedClasses.add(traceInString);
+                                tracesFromChangedClasses.put(traceInString, new int[]{traceID, obj.node.monitors});
                                 totalNewBindings += obj.node.monitors;
                             } else {
-                                traces.add(traceInString);
+                                traces.put(traceBody, new int[]{traceID, obj.node.monitors});
                             }
 
+                            traceID++;
                             totalBindings += obj.node.monitors;
                         }
                         checkpoint = System.nanoTime();
@@ -197,8 +199,10 @@ public class SpecializedSlicingAlgorithmUtil {
             if (collect) {
                 if (!traces.isEmpty()) {
                     try (FileWriter fw = new FileWriter(getTracesFile(specName), false)) {
-                        for (String trace : traces) {
-                            fw.write(trace + System.lineSeparator());
+                        for (Map.Entry<String, int[]> entry : traces.entrySet()) {
+                            // trace ID, frequency, trace
+                            int[] value = entry.getValue();
+                            fw.write(value[0] + " " + value[1] + " " + entry.getKey() + System.lineSeparator());
                         }
 
                         fw.write("Total " + totalBindings + " bindings" + System.lineSeparator());
@@ -216,8 +220,9 @@ public class SpecializedSlicingAlgorithmUtil {
 
                 if (!tracesFromChangedClasses.isEmpty()) {
                     try (FileWriter fw = new FileWriter(getTracesFromChangedClassFile(specName), false)) {
-                        for (String trace : tracesFromChangedClasses) {
-                            fw.write(trace + System.lineSeparator());
+                        for (Map.Entry<String, int[]> entry : tracesFromChangedClasses.entrySet()) {
+                            int[] value = entry.getValue();
+                            fw.write(value[0] + " " + value[1] + " " + entry.getKey() + System.lineSeparator());
                         }
 
                         fw.write("Total " + totalNewBindings + " bindings" + System.lineSeparator());
@@ -237,12 +242,10 @@ public class SpecializedSlicingAlgorithmUtil {
                     Map<Integer, String> testNames = GlobalMonitorManager.getTestNamesSnapshot();
                     try (FileWriter fw = new FileWriter(getTestsFile(specName), false)) {
                         List<String> traceBodies = new ArrayList<>(traceTestFrequencies.keySet());
-                        Collections.sort(traceBodies);
-                        int traceId = 1;
                         for (String body : traceBodies) {
+                            int traceId = traces.getOrDefault(body, new int[]{-1})[0];
                             Map<Integer, Integer> testCounts = traceTestFrequencies.getOrDefault(body, Collections.emptyMap());
                             fw.write(traceId + " " + formatTestCounts(testCounts, testNames) + System.lineSeparator());
-                            traceId += 1;
                         }
                         fw.write("OK" + System.lineSeparator());
                     } catch (IOException ioe) {
