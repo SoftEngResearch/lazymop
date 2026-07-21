@@ -57,7 +57,10 @@ public class MonitorGenerator {
         int iter = 1;
         for (String eventName : monGenUtil.getEventNames()) {
             eventNameToIDMapping.put(eventName, "E" + iter);
+            // This is how you print tinymop_events_encoding_id.txt
             // monGenUtil.getSpecName() + "," + eventName + "," + iter
+            // cat agents/gol-build-agent.log | grep "MARKER" | cut -d ',' -f 2- | sort | uniq | sort -fd
+            System.out.println("MARKER," + monGenUtil.getSpecName() + "," + eventName + "," + iter);
             iter += 1;
         }
     }
