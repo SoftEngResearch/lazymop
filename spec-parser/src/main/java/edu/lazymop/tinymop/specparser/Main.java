@@ -9,35 +9,57 @@ import java.util.stream.Collectors;
 
 import com.runtimeverification.rvmonitor.logicrepository.LogicException;
 import com.runtimeverification.rvmonitor.util.RVMException;
+import edu.lazymop.tinymop.specparser.valg.ValgOptions;
 import edu.lazymop.util.Logger;
 
 public class Main {
     public static boolean onDemandSync = true;
     public static boolean collectTestTraces = true;
+    public static ValgOptions valgOptions = ValgOptions.disabled();
     private static final Logger LOGGER = Logger.getGlobal();
 
     // mvn compile exec:java -Dexec.mainClass="edu.lazymop.tinymop.specparser.Main" -Dexec.args="output props"
     public static void main(String[] args) {
         /*
-        Usage: <output directory> <props directory> [on-demand synchronization: true] [collect test traces: true]
+        Usage: <output directory> <props directory> [on-demand synchronization: true]
+               [collect test traces: true] [-valg [{alpha,epsilon,threshold,initc,initn}]]
+               [-spec <spec-name> {alpha,epsilon,threshold,initc,initn}|off]* [-traj]
          */
         LOGGER.log(Level.INFO, "Initializing Spec Parser...");
-        SpecParser parser = new SpecParser(false);
         if (args.length < 2) {
             LOGGER.log(Level.SEVERE, "Missing output directory or spec directory");
             System.exit(1);
         }
 
-        if (args.length >= 3 && args[2].equals("false")) {
-            LOGGER.log(Level.WARNING, "On-demand synchronization is disabled!");
-            Main.onDemandSync = false;
+        Main.onDemandSync = true;
+        Main.collectTestTraces = true;
+        Main.valgOptions = ValgOptions.disabled();
+
+        int optionIndex = 2;
+        if (optionIndex < args.length) {
+            Main.onDemandSync = Boolean.parseBoolean(args[optionIndex]);
+            optionIndex += 1;
+            if (!Main.onDemandSync) {
+                LOGGER.log(Level.WARNING, "On-demand synchronization is disabled!");
+            }
         }
 
-        if (args.length >= 4 && args[3].equals("false")) {
-            LOGGER.log(Level.WARNING, "Test trace collection is disabled!");
-            Main.collectTestTraces = false;
+        if (optionIndex < args.length) {
+            Main.collectTestTraces = Boolean.parseBoolean(args[optionIndex]);
+            optionIndex += 1;
+            if (!Main.collectTestTraces) {
+                LOGGER.log(Level.WARNING, "Test trace collection is disabled!");
+            }
         }
 
+        try {
+            Main.valgOptions = ValgOptions.parse(Arrays.copyOfRange(args, optionIndex, args.length));
+        } catch (IllegalArgumentException exception) {
+            LOGGER.log(Level.SEVERE, exception.getMessage());
+            System.exit(1);
+        }
+
+        SpecParser parser = new SpecParser(false);
         File outputDirectory = new File(args[0]);
         validate(outputDirectory, false);
         parser.setOutputDirectory(outputDirectory);

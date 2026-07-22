@@ -56,6 +56,7 @@ import com.runtimeverification.rvmonitor.java.rvj.parser.ast.rvmspec.RVMParamete
 import com.runtimeverification.rvmonitor.java.rvj.parser.ast.rvmspec.RVMParameters;
 import edu.lazymop.tinymop.specparser.slicing.component.EventHandler;
 import edu.lazymop.tinymop.specparser.slicing.component.EventHandlerUtil;
+import edu.lazymop.tinymop.specparser.slicing.SlicerGenerationUtil;
 import edu.lazymop.tinymop.specparser.slicing.component.handler.cache.IndexingCache;
 
 public class EventMethodBody {
@@ -69,9 +70,9 @@ public class EventMethodBody {
     private final IndexingTree indexingTreeGen;
     private boolean isSecondPass;
 
-    public EventMethodBody(EventDefinition event, BlockStmt blockStmt, EventHandlerUtil eventHandlerUtil,
+    public EventMethodBody(EventDefinition event, BlockStmt blockStmt, SlicerGenerationUtil slicerGenUtil,
                            boolean isSecondPass) {
-        this.eventHandlerUtil = eventHandlerUtil;
+        this.eventHandlerUtil = slicerGenUtil.eventHandlerUtil;
         this.event = event;
         this.blockStmt = blockStmt;
         this.isSecondPass = isSecondPass;
@@ -94,7 +95,11 @@ public class EventMethodBody {
                 event.getRVMParametersOnSpec(),
                 eventHandlerUtil.getRVMonitorSpec(),
                 event,
-                eventHandlerUtil.indexingTreeManager
+                eventHandlerUtil.indexingTreeManager,
+                slicerGenUtil.getValgConfig(),
+                slicerGenUtil.isValgTrajectoryEnabled(),
+                slicerGenUtil.shouldInstrumentValg(event, false),
+                slicerGenUtil.shouldInstrumentValg(event, true)
         );
 
         MonitorFeatures features = this.indexingTreeGen.monitorClass.getFeatures();

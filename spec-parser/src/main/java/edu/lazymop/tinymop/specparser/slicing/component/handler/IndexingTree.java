@@ -39,6 +39,7 @@ import com.runtimeverification.rvmonitor.java.rvj.output.codedom.CodeMethodInvok
 import com.runtimeverification.rvmonitor.java.rvj.output.codedom.CodeNegExpr;
 import com.runtimeverification.rvmonitor.java.rvj.output.codedom.CodeNewExpr;
 import com.runtimeverification.rvmonitor.java.rvj.output.codedom.CodePrePostfixExpr;
+import com.runtimeverification.rvmonitor.java.rvj.output.codedom.CodeReturnStmt;
 import com.runtimeverification.rvmonitor.java.rvj.output.codedom.CodeStmt;
 import com.runtimeverification.rvmonitor.java.rvj.output.codedom.CodeStmtCollection;
 import com.runtimeverification.rvmonitor.java.rvj.output.codedom.CodeVarDeclStmt;
@@ -63,6 +64,7 @@ import com.runtimeverification.rvmonitor.java.rvj.parser.ast.rvmspec.RVMParamete
 import com.runtimeverification.rvmonitor.java.rvj.parser.ast.rvmspec.RVMParameters;
 import com.runtimeverification.rvmonitor.java.rvj.parser.ast.rvmspec.RVMonitorParameterPair;
 import com.runtimeverification.rvmonitor.java.rvj.parser.ast.rvmspec.RVMonitorSpec;
+import edu.lazymop.tinymop.specparser.valg.ValgConfig;
 
 public class IndexingTree {
 
@@ -76,12 +78,18 @@ public class IndexingTree {
 
     private final Map<RVMonitorParameterPair, IndexingTreeInterface> indexingTreesForCopy;
     private final List<RVMonitorParameterPair> paramPairsForCopy;
+    private final ValgConfig valgConfig;
+    private final boolean saveValgTrajectory;
+    private final boolean instrumentDirectCreation;
+    private final boolean instrumentCloneCreation;
 
     public IndexingTree(TreeMap<RVMParameters, IndexingTreeInterface> indexingTrees,
                         Map<RVMonitorParameterPair, IndexingTreeInterface> indexingTreesForCopy,
                         SuffixMonitor monitorClass, List<RVMonitorParameterPair> paramPairsForCopy,
                         RVMParameters eventParams, RVMonitorSpec rvmSpec, EventDefinition event,
-                        IndexingTreeManager indexingTreeManager) {
+                        IndexingTreeManager indexingTreeManager, ValgConfig valgConfig,
+                        boolean saveValgTrajectory, boolean instrumentDirectCreation,
+                        boolean instrumentCloneCreation) {
         this.indexingTrees = indexingTrees;
         this.indexingTreesForCopy = indexingTreesForCopy;
         this.monitorClass = monitorClass;
@@ -90,6 +98,34 @@ public class IndexingTree {
         this.rvmSpec = rvmSpec;
         this.event = event;
         this.indexingTreeManager = indexingTreeManager;
+        this.valgConfig = valgConfig;
+        this.saveValgTrajectory = saveValgTrajectory;
+        this.instrumentDirectCreation = instrumentDirectCreation;
+        this.instrumentCloneCreation = instrumentCloneCreation;
+    }
+
+    private CodeExpr getValgDecisionCode() {
+        CodeType doubleType = new CodeType("double");
+        return new CodeMethodInvokeExpr(CodeType.bool(),
+                CodeExpr.fromLegacy(CodeType.klass(), "ValgRuntime"),
+                "shouldCreate",
+                CodeLiteralExpr.string(rvmSpec.getName()),
+                CodeExpr.fromLegacy(CodeType.integer(), "event"),
+                CodeExpr.fromLegacy(doubleType, Double.toString(valgConfig.getAlpha())),
+                CodeExpr.fromLegacy(doubleType, Double.toString(valgConfig.getEpsilon())),
+                CodeExpr.fromLegacy(doubleType, Double.toString(valgConfig.getThreshold())),
+                CodeExpr.fromLegacy(doubleType, Double.toString(valgConfig.getInitialCreateValue())),
+                CodeExpr.fromLegacy(doubleType, Double.toString(valgConfig.getInitialNoCreateValue())),
+                CodeLiteralExpr.bool(saveValgTrajectory));
+    }
+
+    private CodeStmt getValgMonitorCreatedCode(CodeVarRefExpr monitor) {
+        return new CodeExprStmt(new CodeMethodInvokeExpr(CodeType.foid(),
+                CodeExpr.fromLegacy(CodeType.klass(), "ValgRuntime"),
+                "monitorCreated",
+                CodeLiteralExpr.string(rvmSpec.getName()),
+                CodeExpr.fromLegacy(CodeType.integer(), "event"),
+                monitor));
     }
 
 
@@ -222,32 +258,40 @@ public class IndexingTree {
         CodeExpr ifcond = definableref;
         CodeStmtCollection ifbody = new CodeStmtCollection();
         stmts.add(new CodeConditionStmt(ifcond, ifbody));
+        CodeStmtCollection creationBody = ifbody;
+        if (instrumentCloneCreation) {
+            CodeStmtCollection skipCreation = new CodeStmtCollection(new CodeReturnStmt());
+            ifbody.add(new CodeConditionStmt(new CodeNegExpr(getValgDecisionCode()), skipCreation));
+        }
 
         CodeVarRefExpr monitorref;
-        ifbody.comment("D(X) defineTo:6");
+        creationBody.comment("D(X) defineTo:6");
         CodeVarDeclStmt decl2 = new CodeVarDeclStmt(new CodeVariable(
                 this.getMonitorType(), "created"), new CodeCastExpr(
                 this.getMonitorType(), new CodeMethodInvokeExpr(
                 CodeType.object(), sourcemonref, "clone")));
-        ifbody.add(decl2);
+        creationBody.add(decl2);
         monitorref = new CodeVarRefExpr(decl2.getVariable());
 
         MonitorWeakRefSetLazyCode weakrefset = new MonitorWeakRefSetLazyCode(
                 this.getMonitorFeatures(), sourceprms, targetprms,
                 dest.getWeakRefs(), monitorref);
-        ifbody.add(weakrefset);
+        creationBody.add(weakrefset);
 
-        ifbody.add(this.getBehaviorObserver().generateMonitorClonedCode(
+        creationBody.add(this.getBehaviorObserver().generateMonitorClonedCode(
                 sourcemonref, monitorref));
+        if (instrumentCloneCreation) {
+            creationBody.add(getValgMonitorCreatedCode(monitorref));
+        }
 
         MonitorInfo moninfo = this.getMonitorInfo();
         if (moninfo != null) {
             String legacycode = moninfo.expand(monitorref.getVariable()
                     .toLegacy(), this.monitorClass, targetprms);
-            ifbody.add(CodeStmtCollection.fromLegacy(legacycode));
+            creationBody.add(CodeStmtCollection.fromLegacy(legacycode));
         }
 
-        ifbody.add(this.generateInsertMonitorCode(dest, transition,
+        creationBody.add(this.generateInsertMonitorCode(dest, transition,
                 monitorref, true, isFromMonitor));
 
         return stmts;
@@ -562,6 +606,11 @@ public class IndexingTree {
     public CodeStmtCollection generateDefineNewCode(
             IndexingTreeQueryResult transition, Strategy strategy) {
         CodeStmtCollection stmts = new CodeStmtCollection();
+        CodeStmtCollection creationBody = stmts;
+        if (instrumentDirectCreation) {
+            CodeStmtCollection skipCreation = new CodeStmtCollection(new CodeReturnStmt());
+            stmts.add(new CodeConditionStmt(new CodeNegExpr(getValgDecisionCode()), skipCreation));
+        }
 
         // It seems the original code assumes that defineNew:1--3 is not needed.
         // I hope that is correct assumption.
@@ -575,20 +624,23 @@ public class IndexingTree {
                 this.getMonitorFeatures(), this.rvmSpec.getParameters(),
                 transition.getWeakRefs(), this.getMonitorType(), arg);
         monitorref = create.getDeclaredMonitorRef();
-        stmts.add(create);
+        creationBody.add(create);
 
         ((CustomMonitor.CustomMonitorFeatures) this.getMonitorFeatures()).addRelatedEvent(eventParams);
-        stmts.add(this.getBehaviorObserver().generateNewMonitorCreatedCode(
+        creationBody.add(this.getBehaviorObserver().generateNewMonitorCreatedCode(
                 monitorref));
+        if (instrumentDirectCreation) {
+            creationBody.add(getValgMonitorCreatedCode(monitorref));
+        }
 
         MonitorInfo moninfo = this.getMonitorInfo();
         if (moninfo != null) {
             String legacycode = moninfo.newInfo(monitorref.getVariable()
                     .toLegacy(), this.eventParams);
-            stmts.add(CodeStmtCollection.fromLegacy(legacycode));
+            creationBody.add(CodeStmtCollection.fromLegacy(legacycode));
         }
 
-        stmts.add(this.generateInsertMonitorCode(transition, transition,
+        creationBody.add(this.generateInsertMonitorCode(transition, transition,
                 monitorref, false, false));
         return stmts;
     }

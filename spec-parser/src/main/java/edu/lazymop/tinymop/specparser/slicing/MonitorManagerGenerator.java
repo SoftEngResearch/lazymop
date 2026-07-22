@@ -251,6 +251,12 @@ public class MonitorManagerGenerator {
                 .setName(fileName)
                 .setModifiers(Modifier.Keyword.PUBLIC)
                 .setBody(constructorBody);
+        if (slicerGenUtil.isValgEnabled()) {
+            constructorBody.addStatement(new AssignExpr(
+                    new FieldAccessExpr(new ThisExpr(), "valgSpecName"),
+                    new StringLiteralExpr(slicerGenUtil.getSpecName()),
+                    AssignExpr.Operator.ASSIGN));
+        }
         klass.addMember(constructor);
 
         generateCreateMonitor(klass);

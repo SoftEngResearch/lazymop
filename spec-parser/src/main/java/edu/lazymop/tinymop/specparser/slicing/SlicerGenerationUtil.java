@@ -22,6 +22,8 @@ import com.runtimeverification.rvmonitor.logicrepository.parser.logicrepositorys
 import com.runtimeverification.rvmonitor.util.RVMException;
 import edu.lazymop.tinymop.specparser.monitoring.MonitorGenerationUtil;
 import edu.lazymop.tinymop.specparser.slicing.component.EventHandlerUtil;
+import edu.lazymop.tinymop.specparser.valg.ValgConfig;
+import edu.lazymop.tinymop.specparser.Main;
 
 public class SlicerGenerationUtil extends MonitorGenerationUtil {
 
@@ -70,6 +72,23 @@ public class SlicerGenerationUtil extends MonitorGenerationUtil {
 
     public boolean shouldCollectTestTraces() {
         return collectTestTraces;
+    }
+
+    public boolean isValgEnabled() {
+        return Main.valgOptions.isEnabledFor(specName, rvmMonitorSpec.getParameters().size());  
+    }
+
+    public boolean isValgTrajectoryEnabled() {
+        return isValgEnabled() && Main.valgOptions.isTrajectoryEnabled();
+    }
+
+    public ValgConfig getValgConfig() {
+        return Main.valgOptions.getConfig(specName);
+    }
+
+    public boolean shouldInstrumentValg(EventDefinition event, boolean cloneCreation) {
+        return Main.valgOptions.shouldInstrument(specName, event.getUniqueId(), rvmMonitorSpec.getParameters().size(),
+                cloneCreation);
     }
 
     public List<EventDefinition> getEvents() {

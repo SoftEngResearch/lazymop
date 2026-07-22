@@ -343,6 +343,16 @@ public class BindingClass extends Component {
                 .addImplementedType("Cloneable")
                 .addImplementedType("com.runtimeverification.rvmonitor.java.rt.RVMObject");
 
+        // If Valg is enabled, add the ValgTrace interface and the getValgTraceIdentity method, which is used by Valg
+        // agent to get the current trace of the monitor.
+        if (slicerGenUtil.isValgEnabled()) {
+            bindingClass.addImplementedType("ValgTrace");
+            bindingClass.addMethod("getValgTraceIdentity", Modifier.Keyword.PUBLIC)
+                    .addAnnotation(new MarkerAnnotationExpr("Override"))
+                    .setType(new ClassOrInterfaceType(null, "Object"))
+                    .setBody(new BlockStmt().addStatement(new ReturnStmt(new NameExpr("node"))));
+        }
+
 
         if (feature.isTimeTrackingNeeded()) {
             if (feature.isDisableHolderNeeded()) {

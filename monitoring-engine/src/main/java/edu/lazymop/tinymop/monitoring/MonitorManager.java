@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import edu.lazymop.tinymop.monitoring.slicing.SlicingAlgorithm;
+import edu.lazymop.tinymop.monitoring.valg.ValgRuntime;
 import edu.lazymop.tinymop.specparser.monitoring.RuntimeMonitor;
 
 public abstract class MonitorManager {
@@ -16,6 +17,7 @@ public abstract class MonitorManager {
     protected Set<RuntimeMonitor> monitors;
 
     protected String specName;
+    protected String valgSpecName;
 
     public MonitorManager(String specName) {
         this.specName = specName;
@@ -43,6 +45,9 @@ public abstract class MonitorManager {
 
     public void notifyMapping(int id, String location, boolean fromChangedClass) {
         locationsMapping.put(id, location);
+        if (valgSpecName != null) {
+            ValgRuntime.registerLocation(valgSpecName, id, location);
+        }
         if (fromChangedClass) {
             locationsInChangedClasses[id] = true;
         }
