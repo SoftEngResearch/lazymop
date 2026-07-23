@@ -125,6 +125,9 @@ public final class ValgAgent {
 
     public void setMonitor(ValgTrace monitor) {
         this.monitor = monitor;
+        if (converged) {
+            monitor.disableValgTraceRecording();
+        }
     }
 
     public void clearMonitor() {

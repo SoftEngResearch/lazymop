@@ -25,6 +25,7 @@ public final class ValgRuntime {
 
     private static final class SpecState {
         private final Set<Object> uniqueTraces = Collections.newSetFromMap(new IdentityHashMap<>());
+        private final Set<Integer> suppressedBindings = ConcurrentHashMap.newKeySet();
         private final ConcurrentMap<AgentKey, ValgAgent> agents = new ConcurrentHashMap<>();
     }
 
@@ -75,10 +76,20 @@ public final class ValgRuntime {
 
     public static boolean shouldCreate(String specName, int event, double alpha, double epsilon,
                                        double threshold, double initialCreateValue,
-                                       double initialNoCreateValue, boolean saveTrajectory) {
+                                       double initialNoCreateValue, boolean saveTrajectory,
+                                       Object... bindings) {
         int locationId = event >> 4;
         AgentKey key = new AgentKey(Thread.currentThread().getId(), locationId);
         SpecState state = SPEC_STATES.computeIfAbsent(specName, ignored -> new SpecState());
+
+        int bindingId = 0;
+        for (Object binding : bindings) {
+            bindingId += System.identityHashCode(binding);
+        }
+        if (state.suppressedBindings.contains(bindingId)) {
+            return false;
+        }
+
         ValgAgent agent = state.agents.computeIfAbsent(key, ignored -> {
             if (saveTrajectory) {
                 registerShutdownHook();
@@ -90,6 +101,9 @@ public final class ValgRuntime {
         boolean create = agent.decideAction();
         if (!create) {
             agent.clearMonitor();
+            // Make sure that the same binding is not considered for future checks
+            // otherwise we will have a bunch of extra unique traces for the same binding
+            state.suppressedBindings.add(bindingId);
         }
         return create;
     }

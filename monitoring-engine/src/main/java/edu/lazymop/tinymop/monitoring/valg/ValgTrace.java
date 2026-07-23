@@ -1,6 +1,8 @@
 package edu.lazymop.tinymop.monitoring.valg;
 
-/** Exposes a monitor's current LazyMOP trace to its Valg agent. */
+/** Exposes and controls a monitor's private trace identity for its Valg agent. */
 public interface ValgTrace {
     Object getValgTraceIdentity();
+
+    default void disableValgTraceRecording() {}
 }

@@ -106,17 +106,22 @@ public class IndexingTree {
 
     private CodeExpr getValgDecisionCode() {
         CodeType doubleType = new CodeType("double");
+        List<CodeExpr> arguments = new ArrayList<>();
+        arguments.add(CodeLiteralExpr.string(rvmSpec.getName()));
+        arguments.add(CodeExpr.fromLegacy(CodeType.integer(), "event"));
+        arguments.add(CodeExpr.fromLegacy(doubleType, Double.toString(valgConfig.getAlpha())));
+        arguments.add(CodeExpr.fromLegacy(doubleType, Double.toString(valgConfig.getEpsilon())));
+        arguments.add(CodeExpr.fromLegacy(doubleType, Double.toString(valgConfig.getThreshold())));
+        arguments.add(CodeExpr.fromLegacy(doubleType, Double.toString(valgConfig.getInitialCreateValue())));
+        arguments.add(CodeExpr.fromLegacy(doubleType, Double.toString(valgConfig.getInitialNoCreateValue())));
+        arguments.add(CodeLiteralExpr.bool(saveValgTrajectory));
+        for (RVMParameter parameter : eventParams) {
+            arguments.add(CodeExpr.fromLegacy(CodeType.object(), parameter.getName()));
+        }
         return new CodeMethodInvokeExpr(CodeType.bool(),
                 CodeExpr.fromLegacy(CodeType.klass(), "ValgRuntime"),
                 "shouldCreate",
-                CodeLiteralExpr.string(rvmSpec.getName()),
-                CodeExpr.fromLegacy(CodeType.integer(), "event"),
-                CodeExpr.fromLegacy(doubleType, Double.toString(valgConfig.getAlpha())),
-                CodeExpr.fromLegacy(doubleType, Double.toString(valgConfig.getEpsilon())),
-                CodeExpr.fromLegacy(doubleType, Double.toString(valgConfig.getThreshold())),
-                CodeExpr.fromLegacy(doubleType, Double.toString(valgConfig.getInitialCreateValue())),
-                CodeExpr.fromLegacy(doubleType, Double.toString(valgConfig.getInitialNoCreateValue())),
-                CodeLiteralExpr.bool(saveValgTrajectory));
+                arguments.toArray(new CodeExpr[arguments.size()]));
     }
 
     private CodeStmt getValgMonitorCreatedCode(CodeVarRefExpr monitor) {
