@@ -75,6 +75,57 @@ if [[ ${ENABLE_INT_ENCODING} == "false" ]]; then
     rm ./monitoring-engine/src/test/java/edu/lazymop/tinymop/monitoring/SpecializedSlicingAlgorithmUtilTest.java
 fi
 
+# Raw spec: handle violated event once
+grep -r "VIOLATION" -l props/ \
+| sort -u \
+| cut -d '/' -f 2 \
+| cut -d '.' -f 1 \
+| while read -r spec; do
+    
+    # Example:
+    #   Arrays_Comparable -> ArraysComparable
+    class="${spec//_/}"
+    
+    file=$(find monitoring-engine/src/main/java \
+                -name "${class}.java" \
+                -print -quit)
+    
+    if [ -z "$file" ]; then
+        echo "NOT FOUND: ${class}.java" >&2
+        continue
+    fi
+    
+    echo "Patching: $file"
+    
+    perl -0pi -e '
+                s{
+                        ^([ \t]*)int[ \t]+storeEvent;[ \t]*\n
+                        (?![ \t]*\n?[ \t]*java\.util\.Set<Integer>[ \t]+violated[ \t]*=[ \t]*new[ \t]+java\.util\.HashSet<>\(\);)
+                }{
+                        $1 . "int storeEvent;\n\n" .
+                        $1 . "java.util.Set<Integer> violated = new java.util.HashSet<>();\n"
+                }gmex;
+
+                s{
+                        ^([ \t]*)storeEvent[ \t]*=[ \t]*event;[ \t]*\n
+                        (?![ \t]*if[ \t]*\([ \t]*violated\.contains\(event\)[ \t]*\)[ \t]*return[ \t]+false;)
+                }{
+                        $1 . "storeEvent = event;\n" .
+                        $1 . "if (violated.contains(event)) return false;\n"
+                }gmex;
+
+                s{
+                        ^([ \t]*)node\.seeingViolatingEvent\(event\);[ \t]*\n
+                        (?![ \t]*violated\.add\(event\);)
+                }{
+                        $1 . "node.seeingViolatingEvent(event);\n" .
+                        $1 . "violated.add(event);\n"
+                }gmex;
+        ' "$file"
+    
+done
+
+
 mvn clean install -DskipTests -Dcheckstyle.skip  # don't run checkstyle on generated code
 if [[ $? -ne 0 ]]; then
     echo "UNABLE TO COMPILE CLASSES"
