@@ -21,6 +21,7 @@ import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.CatchClause;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
+import com.github.javaparser.ast.stmt.IfStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.stmt.ThrowStmt;
 import com.github.javaparser.ast.stmt.TryStmt;
@@ -207,6 +208,16 @@ public class BindingClass extends Component {
             ));
         }
         
+        if (slicerGenUtil.isValgEnabled() && !slicerGenUtil.isRawSpec()) {
+            BlockStmt valgTraceUpdate = new BlockStmt().addStatement(new AssignExpr(
+                    new NameExpr("valgTraceNode"),
+                    new MethodCallExpr(new NameExpr("valgTraceNode"), "getNextNodeAfterSeeingEvent",
+                            new NodeList<>(new NameExpr("eID"))),
+                    AssignExpr.Operator.ASSIGN));
+            seeMethodBody.addStatement(new IfStmt(
+                    new NameExpr("recordValgTrace"), valgTraceUpdate, null));
+        }
+
         klass.addMember(seeMethod);
 
         for (EventDefinition event : slicerGenUtil.getEvents()) {
@@ -299,6 +310,13 @@ public class BindingClass extends Component {
                 new NameExpr("node"),
                 AssignExpr.Operator.ASSIGN
         ));
+        if (slicerGenUtil.isValgEnabled() && !slicerGenUtil.isRawSpec()) {
+            constructorBody.addStatement(new AssignExpr(
+                    new FieldAccessExpr(new ThisExpr(), "valgTraceNode"),
+                    new NameExpr("node"),
+                    AssignExpr.Operator.ASSIGN
+            ));
+        }
         
         // Conditionally add test tracking
         if (slicerGenUtil.shouldCollectTestTraces()) {
@@ -342,6 +360,32 @@ public class BindingClass extends Component {
                 .addExtendedType("com.runtimeverification.rvmonitor.java.rt.tablebase.AbstractSynchronizedMonitor")
                 .addImplementedType("Cloneable")
                 .addImplementedType("com.runtimeverification.rvmonitor.java.rt.RVMObject");
+
+        // If Valg is enabled, add the ValgTrace interface and the getValgTraceIdentity method, which is used by Valg
+        // agent to get the current trace of the monitor.
+        if (slicerGenUtil.isValgEnabled()) {
+            bindingClass.addImplementedType("ValgTrace");
+            bindingClass.addMethod("getValgTraceIdentity", Modifier.Keyword.PUBLIC)
+                    .addAnnotation(new MarkerAnnotationExpr("Override"))
+                    .setType(new ClassOrInterfaceType(null, "Object"))
+                    .setBody(new BlockStmt().addStatement(new ReturnStmt(new NameExpr(
+                            slicerGenUtil.isRawSpec() ? "node" : "valgTraceNode"))));
+
+            if (!slicerGenUtil.isRawSpec()) {
+                bindingClass.addFieldWithInitializer(PrimitiveType.booleanType(), "recordValgTrace",
+                                new BooleanLiteralExpr(true))
+                        .addModifier(Modifier.Keyword.PRIVATE);
+                bindingClass.addField("Trie.Node", "valgTraceNode")
+                        .addModifier(Modifier.Keyword.PRIVATE);
+                bindingClass.addMethod("disableValgTraceRecording", Modifier.Keyword.PUBLIC)
+                        .addAnnotation(new MarkerAnnotationExpr("Override"))
+                        .setType(new VoidType())
+                        .setBody(new BlockStmt().addStatement(new AssignExpr(
+                                new FieldAccessExpr(new ThisExpr(), "recordValgTrace"),
+                                new BooleanLiteralExpr(false),
+                                AssignExpr.Operator.ASSIGN)));
+            }
+        }
 
 
         if (feature.isTimeTrackingNeeded()) {

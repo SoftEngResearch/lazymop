@@ -1,0 +1,5 @@
+configuration,time,traces,unique_traces,violations,unique_violations,unique_violating_traces
+tracemop,7080408,,0,6909,8,0
+valgt,5676987,,0,1181,8,0
+lazymop,4014546,110985006,5197,0,0,22
+valgl,3900459,3812250,4676,0,0,22

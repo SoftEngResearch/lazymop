@@ -1,0 +1,5 @@
+configuration,time,traces,unique_traces,violations,unique_violations,unique_violating_traces
+tracemop,61,0,1,0,0,0
+valgt,63,0,1,0,0,0
+lazymop,57,0,OCI runtime exec failed: exec failed: unable to start container process: chdir to cwd ("/home/tinymop/lazymop/lazymop-traces") set in config.json failed: no such file or directory: unknown,0,0,OCI runtime exec failed: exec failed: unable to start container process: chdir to cwd ("/home/tinymop/lazymop/lazymop-traces") set in config.json failed: no such file or directory: unknown
+valgl,63,0,OCI runtime exec failed: exec failed: unable to start container process: chdir to cwd ("/home/tinymop/valgl/lazymop-traces") set in config.json failed: no such file or directory: unknown,0,0,OCI runtime exec failed: exec failed: unable to start container process: chdir to cwd ("/home/tinymop/valgl/lazymop-traces") set in config.json failed: no such file or directory: unknown

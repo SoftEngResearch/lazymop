@@ -37,6 +37,10 @@ public class Import extends Component {
         code.addImport(monitoring + ".datastructure.LinearTrie");
         code.addImport(monitoring + ".util.SpecializedSlicingAlgorithmUtil");
         code.addImport(monitoring + ".GlobalMonitorManager");
+        if (slicerGenUtil.isValgEnabled()) {
+            code.addImport(monitoring + ".valg.ValgRuntime");
+            code.addImport(monitoring + ".valg.ValgTrace");
+        }
 
         // Imports in the .mop file
         for (ImportDeclaration imp : slicerGenUtil.getImports()) {

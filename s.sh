@@ -3,12 +3,14 @@ FOR_IMM=$1
 ENABLE_ON_DEMAND_SYNC=$2
 ENABLE_INT_ENCODING=$3
 COLLECT_TEST_TRACES=${4:-true}
+VALG_ARGS=("${@:5}")
 
 echo "===== Settings ====="
 echo "FOR_IMM: ${FOR_IMM}"
 echo "ENABLE_ON_DEMAND_SYNC: ${ENABLE_ON_DEMAND_SYNC}"
 echo "ENABLE_INT_ENCODING: ${ENABLE_INT_ENCODING}"
 echo "COLLECT_TEST_TRACES: ${COLLECT_TEST_TRACES}"
+echo "VALG_ARGS: ${VALG_ARGS[*]}"
 
 rm -rf out output && mkdir out output
 
@@ -18,15 +20,11 @@ if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
-if [[ ${ENABLE_ON_DEMAND_SYNC} == "false" ]]; then
-    mvn -pl spec-parser exec:java -Dexec.mainClass="edu.lazymop.tinymop.specparser.Main" -Dexec.args="output props false ${COLLECT_TEST_TRACES}"
-    status=$?
-else
-    mvn -pl spec-parser exec:java -Dexec.mainClass="edu.lazymop.tinymop.specparser.Main" -Dexec.args="output props true ${COLLECT_TEST_TRACES}"
-    status=$?
-fi
+mvn -pl spec-parser exec:java -Dexec.mainClass="edu.lazymop.tinymop.specparser.Main" \
+    -Dexec.args="output props ${ENABLE_ON_DEMAND_SYNC} ${COLLECT_TEST_TRACES} ${VALG_ARGS[*]}"
+status=$?
 
-if [[ $? -ne 0 ]]; then
+if [[ ${status} -ne 0 ]]; then
     echo "UNABLE TO GENERATE CLASSES"
     exit 1
 fi

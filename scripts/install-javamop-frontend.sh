@@ -21,8 +21,8 @@ grep "BUILD" gol-javaparser
 echo "STAGE 2: install javamop frontend"
 (
     if [ ! -d "tracemop" ]; then
-        # git clone https://github.com/SoftEngResearch/tracemop
-        git clone https://github.com/SpoonJoon/tracemop
+        git clone https://github.com/SoftEngResearch/tracemop
+        # git clone https://github.com/SpoonJoon/tracemop
     fi
 
     echo "STAGE 2.1: install tracemop root"

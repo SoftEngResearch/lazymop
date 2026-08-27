@@ -15,6 +15,7 @@ import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.IfStmt;
+import com.github.javaparser.ast.stmt.TryStmt;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.PrimitiveType;
 import com.github.javaparser.ast.type.VoidType;
@@ -45,7 +46,7 @@ public class EventHandler extends Component {
     public BlockStmt getHandlerBodyActivated(EventDefinition event) {
         BlockStmt blockStmt = new BlockStmt();
 
-        EventMethodBody body = new EventMethodBody(event, blockStmt, slicerGenUtil.eventHandlerUtil, isSecondPass);
+        EventMethodBody body = new EventMethodBody(event, blockStmt, slicerGenUtil, isSecondPass);
         body.getWeakReferenceInit();
         body.getMatchedIndexingTreeInit();
         body.getCache();
@@ -68,18 +69,28 @@ public class EventHandler extends Component {
      */
     public void getHandlerBody(EventDefinition event, MethodDeclaration method) {
         BlockStmt blockStmt = new BlockStmt();
+        BlockStmt eventBody = slicerGenUtil.isValgEnabled() ? new BlockStmt() : blockStmt;
         if (event.isStartEvent()) {
             AssignExpr active = new AssignExpr(new NameExpr("activated"), new BooleanLiteralExpr(true), AssignExpr.Operator.ASSIGN);
-            blockStmt.addStatement(active);
+            eventBody.addStatement(active);
         }
 
         EventHandlerUtil.addLock(blockStmt);
         if (event.isStartEvent()) {
-            blockStmt.addStatement(getHandlerBodyActivated(event));
+            eventBody.addStatement(getHandlerBodyActivated(event));
         } else {
-            blockStmt.addStatement(new IfStmt(new NameExpr("activated"), getHandlerBodyActivated(event), null));
+            eventBody.addStatement(new IfStmt(new NameExpr("activated"), getHandlerBodyActivated(event), null));
         }
-        EventHandlerUtil.addUnlock(blockStmt);
+        if (slicerGenUtil.isValgEnabled()) {
+            BlockStmt finallyBody = new BlockStmt();
+            EventHandlerUtil.addUnlock(finallyBody);
+            blockStmt.addStatement(new TryStmt()
+                    .setTryBlock(eventBody)
+                    .setCatchClauses(new NodeList<>())
+                    .setFinallyBlock(finallyBody));
+        } else {
+            EventHandlerUtil.addUnlock(blockStmt);
+        }
 
         method.setBody(blockStmt);
     }
