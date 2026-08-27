@@ -15,7 +15,6 @@ import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.IfStmt;
-import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.stmt.TryStmt;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.PrimitiveType;
@@ -26,7 +25,6 @@ import com.runtimeverification.rvmonitor.java.rvj.parser.ast.rvmspec.EventDefini
 import com.runtimeverification.rvmonitor.java.rvj.parser.ast.rvmspec.RVMParameter;
 import edu.lazymop.tinymop.specparser.slicing.SlicerGenerationUtil;
 import edu.lazymop.tinymop.specparser.slicing.component.handler.EventMethodBody;
-import com.github.javaparser.ast.expr.UnaryExpr;
 
 public class EventHandler extends Component {
     private boolean isSecondPass = false;
@@ -71,9 +69,6 @@ public class EventHandler extends Component {
      */
     public void getHandlerBody(EventDefinition event, MethodDeclaration method) {
         BlockStmt blockStmt = new BlockStmt();
-        blockStmt.addStatement(new IfStmt(
-            new UnaryExpr(new NameExpr("lazymopInitialized"), UnaryExpr.Operator.LOGICAL_COMPLEMENT),
-            new ReturnStmt(), null));
         BlockStmt eventBody = slicerGenUtil.isValgEnabled() ? new BlockStmt() : blockStmt;
         if (event.isStartEvent()) {
             AssignExpr active = new AssignExpr(new NameExpr("activated"), new BooleanLiteralExpr(true), AssignExpr.Operator.ASSIGN);

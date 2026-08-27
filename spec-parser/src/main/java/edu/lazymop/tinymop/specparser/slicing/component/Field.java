@@ -66,8 +66,5 @@ public class Field extends Component {
 
             klass.addMember(field);
         }
-        klass.addFieldWithInitializer(PrimitiveType.booleanType(), "lazymopInitialized",
-                new BooleanLiteralExpr(true),
-                Modifier.Keyword.PRIVATE, Modifier.Keyword.STATIC);
     }
 }
