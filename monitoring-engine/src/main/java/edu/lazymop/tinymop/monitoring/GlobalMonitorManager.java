@@ -38,7 +38,7 @@ public class GlobalMonitorManager {
     }
 
     // registers all spec-specific MonitorManagers
-    public static boolean registerManager(MonitorManager manager) {
+    public static synchronized boolean registerManager(MonitorManager manager) {
         if (registeredManagers == null) {
             initialize();
             uuid = UUID.randomUUID().toString();
@@ -52,6 +52,10 @@ public class GlobalMonitorManager {
             }
         }
 
+        if (!registeredManagers.add(manager)) {
+            return false;
+        }
+
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
                 manager.monitorSlices();
@@ -59,7 +63,7 @@ public class GlobalMonitorManager {
             }
         });
 
-        return registeredManagers.add(manager);
+        return true;
     }
 
     public static void addRunningTest(String testName, int locationID) {

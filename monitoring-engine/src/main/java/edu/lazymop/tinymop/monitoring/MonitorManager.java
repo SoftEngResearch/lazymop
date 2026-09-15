@@ -1,16 +1,17 @@
 package edu.lazymop.tinymop.monitoring;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import edu.lazymop.tinymop.monitoring.slicing.SlicingAlgorithm;
 import edu.lazymop.tinymop.monitoring.valg.ValgRuntime;
 import edu.lazymop.tinymop.specparser.monitoring.RuntimeMonitor;
 
 public abstract class MonitorManager {
-    public HashMap<Integer, String> locationsMapping;
+    public Map<Integer, String> locationsMapping;
     public boolean[] locationsInChangedClasses;
     protected SlicingAlgorithm algo;
 
@@ -22,7 +23,7 @@ public abstract class MonitorManager {
     public MonitorManager(String specName) {
         this.specName = specName;
         monitors = new HashSet<>();
-        locationsMapping = new HashMap<>();
+        locationsMapping = new ConcurrentHashMap<>();
         locationsInChangedClasses = new boolean[100000];
     }
 
@@ -44,7 +45,7 @@ public abstract class MonitorManager {
     }
 
     public void notifyMapping(int id, String location, boolean fromChangedClass) {
-        locationsMapping.put(id, location);
+        locationsMapping.putIfAbsent(id, location);
         if (valgSpecName != null) {
             ValgRuntime.registerLocation(valgSpecName, id, location);
         }

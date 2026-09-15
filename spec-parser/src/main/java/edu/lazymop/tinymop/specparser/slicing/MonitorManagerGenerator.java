@@ -9,6 +9,7 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.ConstructorDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.Parameter;
+import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.AssignExpr;
 import com.github.javaparser.ast.expr.BinaryExpr;
 import com.github.javaparser.ast.expr.FieldAccessExpr;
@@ -16,13 +17,12 @@ import com.github.javaparser.ast.expr.IntegerLiteralExpr;
 import com.github.javaparser.ast.expr.MarkerAnnotationExpr;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.NameExpr;
-import com.github.javaparser.ast.expr.NullLiteralExpr;
 import com.github.javaparser.ast.expr.ObjectCreationExpr;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
 import com.github.javaparser.ast.expr.ThisExpr;
+import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ExplicitConstructorInvocationStmt;
-import com.github.javaparser.ast.stmt.IfStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.PrimitiveType;
@@ -96,33 +96,46 @@ public class MonitorManagerGenerator {
     }
 
     /**
-     * Generates the getManagerInstance method for the monitor manager class.
-     *  if (managerInstance == null) {
-     *      managerInstance = new SPECMonitorManager();
-     *      GlobalMonitorManager.registerManager(managerInstance);
+     * Generates the createManagerInstance method for the monitor manager class.
+     *  private static SPECMonitorManager createManagerInstance() {
+     *      SPECMonitorManager manager = new SPECMonitorManager();
+     *      GlobalMonitorManager.registerManager(manager);
+     *      return manager;
      *  }
-     *  return managerInstance;
+     *
+     * @param klass the ClassOrInterfaceDeclaration representing the monitor manager class
+     */
+    private void generateCreateManagerInstance(ClassOrInterfaceDeclaration klass) {
+        BlockStmt body = new BlockStmt();
+        VariableDeclarator manager = new VariableDeclarator()
+                .setType(fileName)
+                .setName("manager")
+                .setInitializer(new ObjectCreationExpr().setType(fileName));
+        body.addStatement(new VariableDeclarationExpr(manager));
+        body.addStatement(new MethodCallExpr(new NameExpr("GlobalMonitorManager"), "registerManager")
+                .addArgument(new NameExpr("manager")));
+        body.addStatement(new ReturnStmt(new NameExpr("manager")));
+
+        MethodDeclaration method = new MethodDeclaration(
+                Modifier.createModifierList(Modifier.Keyword.PRIVATE, Modifier.Keyword.STATIC),
+                new ClassOrInterfaceType(null, fileName), "createManagerInstance")
+                .setBody(body);
+        klass.addMember(method);
+    }
+
+    /**
+     * Generates the getManagerInstance method for the monitor manager class.
+     *  public static SPECMonitorManager getManagerInstance() {
+     *      return managerInstance;
+     *  }
      *
      * @param klass the ClassOrInterfaceDeclaration representing the monitor manager class
      */
     private void generateGetManagerInstance(ClassOrInterfaceDeclaration klass) {
-        BlockStmt body = new BlockStmt();
         MethodDeclaration method = new MethodDeclaration(
                 Modifier.createModifierList(Modifier.Keyword.PUBLIC, Modifier.Keyword.STATIC),
                 new ClassOrInterfaceType(null, fileName), "getManagerInstance")
-                .setBody(body);
-
-        BinaryExpr ifCondition = new BinaryExpr(new NameExpr("managerInstance"), new NullLiteralExpr(),
-                BinaryExpr.Operator.EQUALS);
-        BlockStmt ifBody = new BlockStmt();
-        body.addStatement(new IfStmt().setCondition(ifCondition).setThenStmt(ifBody));
-        ifBody.addStatement(new AssignExpr(new NameExpr("managerInstance"),
-                new ObjectCreationExpr().setType(new ClassOrInterfaceType(null, fileName)),
-                AssignExpr.Operator.ASSIGN));
-        ifBody.addStatement(
-                new MethodCallExpr(new NameExpr("GlobalMonitorManager"), "registerManager")
-                        .addArgument(new NameExpr("managerInstance")));
-        body.addStatement(new ReturnStmt(new NameExpr("managerInstance")));
+                .setBody(new BlockStmt().addStatement(new ReturnStmt(new NameExpr("managerInstance"))));
         klass.addMember(method);
     }
 
@@ -232,7 +245,8 @@ public class MonitorManagerGenerator {
                 .addExtendedType("MonitorManager");
 
         addImport(code);
-        klass.addPrivateField(fileName, "managerInstance").setStatic(true);
+        klass.addPrivateField(fileName, "managerInstance").setStatic(true).setFinal(true)
+                .getVariable(0).setInitializer(new MethodCallExpr("createManagerInstance"));
 
         BlockStmt constructorBody = new BlockStmt();
         constructorBody.addStatement(new ExplicitConstructorInvocationStmt().setThis(false)
@@ -260,6 +274,7 @@ public class MonitorManagerGenerator {
         klass.addMember(constructor);
 
         generateCreateMonitor(klass);
+        generateCreateManagerInstance(klass);
         generateGetManagerInstance(klass);
         generateCollectStatistics(klass);
         generateMonitorSlices(klass);

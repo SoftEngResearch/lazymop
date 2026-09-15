@@ -1,5 +1,8 @@
 package edu.lazymop.tinymop.specparser;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
@@ -51,6 +54,18 @@ public class MonitorManagerGenerationTest {
         generateManagerCode(specName, outPath);
     }
 
+    @Test
+    public void testManagerUsesEagerSingleton() throws RVMException, LogicException {
+        String specName = "Iterator_HasNext";
+        String outPath = System.getProperty("java.io.tmpdir") + File.separator + specName.replace("_", "")
+                + "MonitorManager.java";
+        String generatedCode = generateManagerCode(specName, outPath);
+        assertTrue(generatedCode.contains(
+                "private static final IteratorHasNextMonitorManager managerInstance = createManagerInstance();"));
+        assertTrue(generatedCode.contains("private static IteratorHasNextMonitorManager createManagerInstance()"));
+        assertFalse(generatedCode.contains("if (managerInstance == null)"));
+    }
+
     public static BufferedWriter getWriter(String filePath) {
         Path path = Paths.get(filePath);
         BufferedWriter writer = null;
@@ -65,21 +80,24 @@ public class MonitorManagerGenerationTest {
         return writer;
     }
 
-    private static void generateManagerCode(String specName, String outPath) throws LogicException, RVMException {
+    private static String generateManagerCode(String specName, String outPath) throws LogicException, RVMException {
         File resourceFile = TestUtil.getResourceFile(specName + ".mop");
         LOGGER.log(Level.INFO, "MOP file for monitor manager code generation: " + resourceFile.getPath());
         SpecParser parser = new SpecParser(false);
         parser.setOutputDirectory(new File(System.getProperty("java.io.tmpdir")));
         parser.parseSingleSpec(resourceFile);
-        File rvmFile = new File(resourceFile.getPath().replace(".mop", ".rvm"));
+        File rvmFile = new File(parser.getOutputDirectory(), resourceFile.getName().replace(".mop", ".rvm"));
         RVMParser.processSpecFile(rvmFile, parser.getOutputDirectory(), Main.options.verbose);
         StandaloneRVMProcessor processor = RVMParser.processor;
         SlicerGenerationUtil slicerGenUtil = new SlicerGenerationUtil(processor.getName(),
                 processor.getRvmSpecFile(), processor.getMonitorData(), true);
+        String generatedCode = new MonitorManagerGenerator(
+                slicerGenUtil, processor.getMonitorData()).generateManagerCode();
         try (BufferedWriter writer = getWriter(outPath)) {
-            writer.write(new MonitorManagerGenerator(slicerGenUtil, processor.getMonitorData()).generateManagerCode());
+            writer.write(generatedCode);
         } catch (IOException ioe) {
             LOGGER.log(Level.INFO, "ERROR during monitor manager code generation: " + ioe.getMessage() + "\n");
         }
+        return generatedCode;
     }
 }
