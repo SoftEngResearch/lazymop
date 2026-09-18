@@ -6,16 +6,17 @@ import java.util.concurrent.*;
 public aspect ThreadAspect {
     pointcut threadStart() : (
         call(* Thread+.start()) ||
-        call(* ExecutorService+.execute(..)) ||
+        call(* Executor+.execute(..)) ||
         call(* ExecutorService+.submit(..)) ||
+        call(* ExecutorService+.invokeAll(..)) ||
+        call(* ExecutorService+.invokeAny(..)) ||
         call(* CompletionService+.submit(..)) ||
-        call(* ForkJoinPool+.submit(..)) ||
-        call(* ForkJoinPool+.execute(..)) ||
-        call(* ThreadPoolExecutor+.execute(..)) ||
-        call(* ThreadPoolExecutor+.submit(..)) ||
-        call(* CompletableFuture+.runAsync(..)) ||
-        call(* CompletableFuture+.supplyAsync(..)) ||
-        call(* Timer+.schedule(..))
+        call(* ScheduledExecutorService+.schedule*(..)) ||
+        call(* ForkJoinPool+.invoke(..)) ||
+        call(* ForkJoinTask+.fork()) ||
+        call(* ForkJoinTask+.invokeAll(..)) ||
+        call(* CompletionStage+.*Async(..)) ||
+        call(* Timer+.schedule*(..))
         ) && !adviceexecution() && BaseAspect.notwithin();
     before() : threadStart() {
         if (!edu.lazymop.tinymop.monitoring.GlobalMonitorManager.isMultiThreaded) {
