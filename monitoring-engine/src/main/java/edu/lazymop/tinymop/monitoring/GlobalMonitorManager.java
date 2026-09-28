@@ -23,8 +23,7 @@ public class GlobalMonitorManager {
     public static int currentRunningTest = 0;
     public static int nextTestID = 1;
     public static Map<Integer, Integer> locationToTestID = new HashMap<>();
-    public static Set<String> changedMethods = null;
-    public static boolean changedMethodsInit = false;
+    private static final Set<String> changedMethods = loadChangedMethods();
     public static String uuid = "";
     public static Map<Integer, String> testIDToName = new HashMap<>();
     public static boolean isMultiThreaded = false;
@@ -81,31 +80,29 @@ public class GlobalMonitorManager {
         }
     }
 
-    public static boolean isChangedMethods(String klass) {
-        if (!changedMethodsInit) {
-            changedMethodsInit = true;
+    private static Set<String> loadChangedMethods() {
+        Set<String> methods = new HashSet<>();
+        String changedFile = System.getenv("TINYMOP_CHANGED_CLASSES");
 
-            String changedFile = System.getenv("TINYMOP_CHANGED_CLASSES");
-            changedMethods = new HashSet<>();
-
-            if (changedFile == null) {
-                return false;
-            }
-
-            try {
-                try (BufferedReader br = new BufferedReader(new FileReader(changedFile))) {
-                    String line;
-                    while ((line = br.readLine()) != null) {
-                        if (!line.isEmpty()) {
-                            changedMethods.add(line);
-                        }
-                    }
-                }
-            } catch (IOException ioe) {
-                return false;
-            }
+        if (changedFile == null) {
+            return Collections.emptySet();
         }
 
+        try (BufferedReader br = new BufferedReader(new FileReader(changedFile))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (!line.isEmpty()) {
+                    methods.add(line);
+                }
+            }
+        } catch (IOException ignored) {
+            // Preserve the currently loaded entries.
+        }
+
+        return Collections.unmodifiableSet(methods);
+    }
+
+    public static boolean isChangedMethods(String klass) {
         return changedMethods.contains(klass);
     }
 
